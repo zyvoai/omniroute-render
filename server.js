@@ -29,7 +29,7 @@ const STATE_FILE = path.join(DATA_DIR, "state.json")
 const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local OmniRoute
 const PROBE_TOKENS = 5
 const PROBE_TIMEOUT_MS = 45_000
-const CONCURRENCY = 2
+const CONCURRENCY = 1 // keeps heap/CPU low on small containers
 const ACTIVE_EVERY_MS = 3 * 60 * 60 * 1000
 const DAILY_EVERY_MS = 24 * 60 * 60 * 1000
 const FULL_EVERY_MS = 7 * 24 * 60 * 60 * 1000
@@ -73,6 +73,11 @@ const child = spawn(process.execPath, ["node_modules/omniroute/dist/server-ws.mj
     HOSTNAME: "0.0.0.0",
     NODE_ENV: "production",
     DATA_DIR: CHILD_DATA,
+    // official image default — without a raised ceiling omniroute's own
+    // pressure guard trips at ~416MB and 503s every request
+    NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"]
+      .filter(Boolean)
+      .join(" "),
   },
   stdio: ["ignore", "pipe", "pipe"],
 })
