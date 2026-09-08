@@ -1,9 +1,9 @@
 {
   "name": "omniroute-render",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
-    "start": "node node_modules/omniroute/dist/server-ws.mjs"
+    "start": "node server.js"
   },
   "dependencies": {
     "omniroute": "3.8.50"

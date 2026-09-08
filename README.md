@@ -1,33 +1,49 @@
-# OmniRoute on Render (fresh instance)
+# OmniRoute on Render — with live model health scanner
 
-Deploy [omniroute](https://www.npmjs.com/package/omniroute) (v3.8.50) as a
-free public web service. Your PC install and its data stay untouched — this
-is a separate, clean instance.
+Fresh public OmniRoute (v3.8.50) + a zero-dependency gateway that keeps a
+**live list of working models**: probes every model, buckets them
+(active / daily-limit / no-access / paid / hanging), rescans the active
+list every 3h, rechecks daily-limit models daily, full-rescans weekly —
+and serves the fresh list at `/active-models` for zyvo to show.
 
-## Deploy on Render (free)
+Your PC install and its data stay untouched — this is a separate instance.
 
-1. Sign up at https://dashboard.render.com (GitHub or Google login)
-2. New + → **Web Service** → "Build and deploy from a Git repository" →
-   connect GitHub → pick **zyvoai/omniroute-render**
+## Deploy (free)
+
+1. Sign up at https://dashboard.render.com (GitHub/Google login)
+2. New + → **Web Service** → connect GitHub → **zyvoai/omniroute-render**
 3. Settings:
-   - Runtime: **Node**
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Instance Type: **Free**
-4. Add Environment variables:
-   - `JWT_SECRET` = PbEy+csAGLGu/Jey2ZnUb6ZDPezZoTK8KlhqV0FyqK9z3JVHcABjxkWHpCDPQsx/
-   - `API_KEY_SECRET` = 590d2150ee90fc3868440f8c4f76a2829502bfd553133039f350eed18c341c8d
-   - `INITIAL_PASSWORD` = (choose your own strong dashboard password)
-5. Create Web Service → done. URL: https://omniroute-render.onrender.com
+   - Runtime **Node** · Build `npm install` · Start `npm start` · **Free**
+4. Environment variables:
+   - `JWT_SECRET` — any long random string
+   - `API_KEY_SECRET` — any long random string
+   - `INITIAL_PASSWORD` — your dashboard password
+   - `OMNIROUTE_API_KEY` — (optional, later) an OmniRoute API key so the
+     scanner probes with auth; set after you create a key in the dashboard
+5. Create — URL becomes `https://omniroute-render.onrender.com`
 
-## First run
+## First run (5 minutes)
 
-- Open the URL → log in to the dashboard with `INITIAL_PASSWORD`
-- Add your upstream providers → create an API key
-- Put that key in zyvo's `config/zyvo.json` (baseURL:
-  https://omniroute-render.onrender.com/v1)
+1. Open the URL → OmniRoute dashboard → log in with `INITIAL_PASSWORD`
+2. Add your upstream providers (the same ones your PC copy uses)
+3. Dashboard → create an **API key** → put it in the Render env
+   `OMNIROUTE_API_KEY` (Save & Deploy) — now the scanner probes with auth
+4. Within ~1-2 min of OmniRoute booting, the first **full scan** starts
+   (3.5k+ models, ~1-2h at safe concurrency); check progress:
+   `https://<url>/scan/status`
+5. Active list for zyvo: `https://<url>/active-models`
 
-## Free tier notes
+## Endpoints
 
-- Sleeps after ~15 min idle (first request then takes ~1 min to wake)
-- RAM 512 MB; disk resets on redeploys (re-add providers if a deploy wipes them)
+| Route | What |
+|---|---|
+| `GET /active-models` | fresh list: active first, daily-limit labelled `· ⏳ Daily limit reached` |
+| `GET /scan/status` | scanner state, counts per bucket, last log lines |
+| `POST /scan/full` | kick a full rescan now |
+| everything else | proxied to OmniRoute (`/v1/...`, dashboard) |
+
+## Free tier truth
+
+- Sleeps after ~15 min idle; any request (each zyvo launch) wakes it
+- 512 MB RAM shared by gateway + OmniRoute — if it OOMs, prune providers
+- Disk is ephemeral: state.json is rebuilt by the boot scan after redeploys
