@@ -62,8 +62,18 @@ const note = (m) => {
 }
 
 // ── start OmniRoute child ──────────────────────────────────────────
+// Env mirrors the official Docker image (DATA_DIR/HOSTNAME matter for a
+// fresh boot — without DATA_DIR the child can hang before listening).
+const CHILD_DATA = path.join(process.cwd(), "data", "omniroute")
+fs.mkdirSync(CHILD_DATA, { recursive: true })
 const child = spawn(process.execPath, ["node_modules/omniroute/dist/server-ws.mjs"], {
-  env: { ...process.env, PORT: String(UPSTREAM_PORT) },
+  env: {
+    ...process.env,
+    PORT: String(UPSTREAM_PORT),
+    HOSTNAME: "0.0.0.0",
+    NODE_ENV: "production",
+    DATA_DIR: CHILD_DATA,
+  },
   stdio: ["ignore", "pipe", "pipe"],
 })
 child.stdout.on("data", (d) => process.stdout.write(`[omniroute] ${d}`))
