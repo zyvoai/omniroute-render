@@ -255,10 +255,24 @@ load()
 server.listen(PORT, () => console.log(`[gateway] listening on :${PORT}, omniroute on :${UPSTREAM_PORT}`))
 
 // boot + periodic scans
-setTimeout(() => {
-  if (!Object.keys(state.models).length) fullScan()
-  else activeScan()
-}, 60_000) // give omniroute a minute to boot first
+// The OmniRoute child takes 1-2 min to boot (Next.js + sqlite). Retry the
+// first scan until the child actually serves models (max ~15 min of tries).
+let bootTries = 0
+const bootScan = () => {
+  bootTries++
+  if (bootTries > 20) return note("boot scan gave up — /scan/full to retry")
+  kick("full", async () => {
+    const ids = await listIds()
+    if (!ids.length) {
+      note(`boot try ${bootTries}: child not ready, retrying in 45s`)
+      save()
+      setTimeout(bootScan, 45_000)
+      return
+    }
+    await scanIds(ids, "full")
+  })
+}
+setTimeout(bootScan, 60_000)
 setInterval(activeScan, ACTIVE_EVERY_MS)
 setInterval(dailyScan, DAILY_EVERY_MS)
 setInterval(fullScan, FULL_EVERY_MS)
