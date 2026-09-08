@@ -310,19 +310,56 @@ refresh(); setInterval(refresh, 8000)
 </script></body></html>`
 
 // ── proxy + router ─────────────────────────────────────────────────
-const proxy = (req, res) => {
-  const up = http.request(
-    { host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers: { ...req.headers, host: `${UPSTREAM_HOST}:${UPSTREAM_PORT}` } },
-    (ur) => {
-      res.writeHead(ur.statusCode, ur.headers)
-      ur.pipe(res)
+// zyvo writes model ids as "omniroute/<real-id>" so opencode keeps them under
+// the Zyvo provider — strip that prefix before they reach OmniRoute.
+const stripPrefix = (raw) => {
+  try {
+    const j = JSON.parse(raw.toString("utf8"))
+    if (typeof j.model === "string" && j.model.startsWith("omniroute/")) {
+      j.model = j.model.slice("omniroute/".length)
+      return Buffer.from(JSON.stringify(j))
     }
-  )
-  up.on("error", () => {
-    if (!res.headersSent) res.writeHead(502, { "Content-Type": "application/json" })
-    res.end(JSON.stringify({ error: "omniroute upstream not ready" }))
+  } catch {}
+  return raw
+}
+
+const proxy = (req, res) => {
+  const isBodyful = req.method === "POST" || req.method === "PUT" || req.method === "PATCH"
+  if (!isBodyful) {
+    const up = http.request(
+      { host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers: { ...req.headers, host: `${UPSTREAM_HOST}:${UPSTREAM_PORT}` } },
+      (ur) => {
+        res.writeHead(ur.statusCode, ur.headers)
+        ur.pipe(res)
+      }
+    )
+    up.on("error", () => {
+      if (!res.headersSent) res.writeHead(502, { "Content-Type": "application/json" })
+      res.end(JSON.stringify({ error: "omniroute upstream not ready" }))
+    })
+    return req.pipe(up)
+  }
+  const chunks = []
+  req.on("data", (c) => chunks.push(c))
+  req.on("end", () => {
+    let body = Buffer.concat(chunks)
+    if (req.url.startsWith("/v1/")) body = stripPrefix(body)
+    const headers = { ...req.headers }
+    headers["content-length"] = String(body.length)
+    delete headers["transfer-encoding"]
+    const up = http.request(
+      { host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers },
+      (ur) => {
+        res.writeHead(ur.statusCode, ur.headers)
+        ur.pipe(res)
+      }
+    )
+    up.on("error", () => {
+      if (!res.headersSent) res.writeHead(502, { "Content-Type": "application/json" })
+      res.end(JSON.stringify({ error: "omniroute upstream not ready" }))
+    })
+    up.end(body)
   })
-  req.pipe(up)
 }
 
 const server = http.createServer((req, res) => {
