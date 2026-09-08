@@ -1,0 +1,14 @@
+{
+  "name": "omniroute-render",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node node_modules/omniroute/dist/server-ws.mjs"
+  },
+  "dependencies": {
+    "omniroute": "3.8.50"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
