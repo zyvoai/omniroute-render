@@ -159,18 +159,26 @@ async function scanIds(ids, kind) {
 const listIds = () =>
   new Promise((resolve) => {
     http
-      .get({ host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: "/v1/models" }, (res) => {
-        let raw = ""
-        res.on("data", (d) => (raw += d))
-        res.on("end", () => {
-          try {
-            const ids = JSON.parse(raw).data.map((m) => m.id).filter((id) => !SKIP_PATTERNS.test(id))
-            resolve(ids)
-          } catch {
-            resolve([])
-          }
-        })
-      })
+      .get(
+        {
+          host: UPSTREAM_HOST,
+          port: UPSTREAM_PORT,
+          path: "/v1/models",
+          headers: SCAN_KEY ? { Authorization: `Bearer ${SCAN_KEY}` } : {},
+        },
+        (res) => {
+          let raw = ""
+          res.on("data", (d) => (raw += d))
+          res.on("end", () => {
+            try {
+              const ids = JSON.parse(raw).data.map((m) => m.id).filter((id) => !SKIP_PATTERNS.test(id))
+              resolve(ids)
+            } catch {
+              resolve([])
+            }
+          })
+        }
+      )
       .on("error", () => resolve([]))
   })
 
