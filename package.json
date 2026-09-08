@@ -6,9 +6,10 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "omniroute": "3.8.50"
+    "omniroute": "3.8.50",
+    "better-sqlite3": "^11.10.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   }
 }
