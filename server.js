@@ -32,8 +32,8 @@ const GATEWAY_DATA = process.env.DATA_DIR
 const STATE_FILE = path.join(GATEWAY_DATA, "state.json")
 const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local OmniRoute
 const PROBE_TOKENS = 5
-const PROBE_TIMEOUT_MS = 45_000
-const CONCURRENCY = 1 // keeps heap/CPU low on small containers
+const PROBE_TIMEOUT_MS = 30_000 // dead upstreams die fast; live models answer before this
+const CONCURRENCY = 2 // heap ceiling is 1GB now — P=2 is safe and 2x faster
 const ACTIVE_EVERY_MS = 3 * 60 * 60 * 1000
 const DAILY_EVERY_MS = 24 * 60 * 60 * 1000
 const FULL_EVERY_MS = 7 * 24 * 60 * 60 * 1000
@@ -449,6 +449,19 @@ const server = http.createServer((req, res) => {
 load()
 server.listen(PORT, () => console.log(`[gateway] listening on :${PORT}, omniroute on :${UPSTREAM_PORT}`))
 
+// auto-detect: every 15 min diff the catalog — newly added provider models
+// get probed immediately and join the active list without a full rescan
+const catalogScan = () =>
+  kick("catalog", async () => {
+    const ids = await listIds()
+    const fresh = ids.filter((id) => !state.models[id])
+    if (!fresh.length) return
+    note(`catalog diff: ${fresh.length} new model(s) detected — probing`)
+    await scanIds(fresh, "catalog")
+    state.updatedAt = Date.now()
+    save()
+  })
+
 // boot + periodic scans
 // The OmniRoute child takes 1-2 min to boot (Next.js + sqlite). Retry the
 // first scan until the child actually serves models (max ~15 min of tries).
@@ -468,6 +481,8 @@ const bootScan = () => {
   })
 }
 setTimeout(bootScan, 60_000)
+setInterval(catalogScan, 15 * 60 * 1000)
+setTimeout(catalogScan, 5 * 60 * 1000)
 setInterval(activeScan, ACTIVE_EVERY_MS)
 setInterval(dailyScan, DAILY_EVERY_MS)
 setInterval(fullScan, FULL_EVERY_MS)
