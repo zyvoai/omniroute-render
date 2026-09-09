@@ -455,6 +455,7 @@ async function refresh(){
   }catch(e){ document.getElementById('badge').textContent = 'offline…' }
 }
 async function rescan(){ await fetch('/scan/full', {method:'POST'}); refresh() }
+async function go(k){ await fetch('/scan/'+k, {method:'POST'}); setTimeout(refresh, 800) }
 refresh(); setInterval(refresh, 8000)
 </script></body></html>`
 
