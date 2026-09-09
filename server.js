@@ -935,8 +935,25 @@ const server = http.createServer((req, res) => {
   if (req.method === "POST" && u.startsWith("/scan/full")) { if (!state.scanning) fullScan(); return send(res, 202, { started: !state.scanning ? "full" : "busy" }) }
   if (req.method === "POST" && u.startsWith("/scan/new")) { if (!state.scanning) newScan(); return send(res, 202, { started: !state.scanning ? "new" : "busy" }) }
   if (req.method === "POST" && u.startsWith("/scan/stop")) { stopScan(); return send(res, 200, { stopping: true }) }
+  // SOURCE OF TRUTH: /v1/models এ শুধু বেঁচে থাকা model — যেকোনো client
+  // (opencode auto-fetch, curl, যা খুশি) সরাসরি এটাই দেখবে
+  if (req.method === "GET" && u.startsWith("/v1/models"))
+    return send(res, 200, { object: "list", data: activeOnlyModels() })
   return proxy(req, res)
 })
+
+const activeOnlyModels = () => {
+  const ok = new Set(activeList())
+  const lim = new Set(limitList())
+  return Object.entries(state.models)
+    .filter(([id, v]) => ok.has(id) || lim.has(id))
+    .map(([id, v]) => ({
+      id: v.status === "daily-limit" ? id + "  ⏳ daily limit" : id,
+      object: "model",
+      created: Math.floor((v.lastChecked || Date.now()) / 1000),
+      owned_by: "zyvo",
+    }))
+}
 
 const proxy = (req, res) => {
   const isBodyful = req.method === "POST" || req.method === "PUT" || req.method === "PATCH"
