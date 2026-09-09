@@ -34,7 +34,7 @@ const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local Om
 const PROBE_TOKENS = 5
 const PROBE_TIMEOUT_MS = 50_000 // slow free upstreams take 30-60s to first byte
 const CONCURRENCY = 2 // heap ceiling is 1GB now — P=2 is safe and 2x faster
-const ACTIVE_EVERY_MS = 3 * 60 * 60 * 1000
+const ACTIVE_EVERY_MS = 24 * 60 * 60 * 1000 // daily — 3h was too noisy/slow for big catalogs
 const DAILY_EVERY_MS = 24 * 60 * 60 * 1000
 const FULL_EVERY_MS = 7 * 24 * 60 * 60 * 1000
 const SKIP_PATTERNS = /(content-safety|safety-guard|nemoguard|riva-translate|embedding|rerank|whisper|tts|guard)/i
