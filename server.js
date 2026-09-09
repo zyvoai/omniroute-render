@@ -33,7 +33,7 @@ const STATE_FILE = path.join(GATEWAY_DATA, "state.json")
 const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local OmniRoute
 const PROBE_TOKENS = 5
 const PROBE_TIMEOUT_MS = 50_000 // slow free upstreams take 30-60s to first byte
-const CONCURRENCY = 2 // heap ceiling is 1GB now — P=2 is safe and 2x faster
+const CONCURRENCY = 4 // 1GB heap ceiling — P=4 makes full passes much faster
 const ACTIVE_EVERY_MS = 24 * 60 * 60 * 1000 // daily — 3h was too noisy/slow for big catalogs
 const DAILY_EVERY_MS = 24 * 60 * 60 * 1000
 const FULL_EVERY_MS = 7 * 24 * 60 * 60 * 1000
@@ -165,6 +165,8 @@ async function scanIds(ids, kind) {
   if (state.scanning) return
   state.scanning = kind
   if (kind === "full") state.totalIds = ids.length
+  state.runTotal = ids.length
+  state.runDone = 0
   note(`${kind} scan started (${ids.length} models)`)
   save()
   let done = 0
@@ -198,6 +200,7 @@ async function scanIds(ids, kind) {
       state.models[id] = { status, label, lastChecked: Date.now(), strikes: 0 }
       if (prev?.status !== status) note(`${id}: ${prev?.status || "new"} -> ${status} (${code})`)
       done++
+      state.runDone = done
       if (done % 25 === 0) save()
     }
   })
@@ -352,10 +355,11 @@ async function refresh(){
     if (d.scanning) { b.textContent = 'SCANNING: ' + d.scanning; b.className = 'badge b-scan' }
     else { b.textContent = 'idle'; b.className = 'badge b-idle' }
     document.getElementById('updated').textContent = d.updatedAt ? new Date(d.updatedAt).toLocaleString() : ''
-    const probed = d.total || 0
+    const probed = (d.probed ?? d.total) || 0
+    const total = d.total || probed
     document.getElementById('probed').textContent = probed
-    document.getElementById('total').textContent = d.totalIds || probed
-    document.getElementById('bar').style.width = (d.totalIds ? Math.min(100, probed / d.totalIds * 100) : 0) + '%'
+    document.getElementById('total').textContent = total
+    document.getElementById('bar').style.width = (total ? Math.min(100, probed / total * 100) : 0) + '%'
     const det = d.detail || []
     const put = (id, arr) => { document.getElementById(id).innerHTML = arr.length ? arr.map(x =>
       '<li class="mono">' + esc(x.id) + (x.label ? ' <small>' + esc(x.label) + '</small>' : '') + '</li>').join('') : '<li class="sub">— none —</li>' }
@@ -368,6 +372,35 @@ async function refresh(){
 async function rescan(){ await fetch('/scan/full', {method:'POST'}); refresh() }
 refresh(); setInterval(refresh, 8000)
 </script></body></html>`
+
+// complete, ready-to-use zyvo config — the phone wrapper downloads this and
+// swaps it in atomically (no python, no merging on the phone)
+const zyvoConfigPayload = (host) => {
+  const entries = Object.entries(state.models)
+    .filter(([, v]) => ["active", "daily-limit", "image"].includes(v.status))
+  const models = {}
+  for (const [id, v] of entries) {
+    const name = v.status === "daily-limit" ? `${prettyName(id)} · ⏳ ${v.label}` : prettyName(id)
+    models[`omniroute/${id}`] = { name }
+  }
+  if (!Object.keys(models).length) return null
+  const first = entries.find(([, v]) => v.status === "active")
+  return {
+    $schema: "https://opencode.ai/config.json",
+    model: `zyvo/omniroute/${first ? first[0] : entries[0][0]}`,
+    provider: {
+      zyvo: {
+        name: "Zyvo",
+        npm: "@ai-sdk/openai-compatible",
+        options: {
+          baseURL: `https://${host}/v1`,
+          apiKey: process.env.OMNIROUTE_API_KEY || "",
+        },
+        models,
+      },
+    },
+  }
+}
 
 // ── proxy + router ─────────────────────────────────────────────────
 // zyvo writes model ids as "omniroute/<real-id>" so opencode keeps them under
@@ -428,6 +461,11 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify(obj))
   }
   if (req.method === "GET" && req.url.startsWith("/active-models")) return send(200, activeModelsPayload())
+  if (req.method === "GET" && req.url.startsWith("/zyvo-config")) {
+    const cfg = zyvoConfigPayload(req.headers.host)
+    if (!cfg) return send(503, { error: "no active models yet — scanner still working" })
+    return send(200, cfg)
+  }
   if (req.method === "GET" && req.url.startsWith("/scan/status")) {
     const detail = Object.entries(state.models).map(([id, v]) => ({ id, status: v.status, label: v.label || "" }))
     const counts = {}
@@ -436,7 +474,8 @@ const server = http.createServer((req, res) => {
       ...state,
       models: detail.length,
       counts,
-      total: detail.length,
+      probed: state.runDone ?? detail.length,
+      total: state.runTotal || detail.length,
       totalIds: state.totalIds || detail.length,
       detail,
     })
