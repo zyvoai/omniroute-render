@@ -378,160 +378,265 @@ const zyvoConfigPayload = (host) => {
 
 // ── GUI ────────────────────────────────────────────────────────────
 const GUI_HTML = `<!doctype html>
-<html lang="bn"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZYVO · Model Control Center</title>
 <style>
-:root{--bg:#070b09;--card:#0f1512;--card2:#131a16;--line:#1d2620;--ink:#e9f2ec;--mut:#7f9187;
---grn:#3ddc84;--blu:#4d9fff;--amb:#ffc94d;--red:#ff5c6c;--vio:#a06bff}
-*{margin:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
-body{background:var(--bg);color:var(--ink);min-height:100vh}
-.wrap{max-width:860px;margin:0 auto;padding:18px 14px 60px}
-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-h1{font-size:22px}
-h1 .z{color:var(--grn)}
-.badge{font-size:11px;font-weight:800;padding:4px 12px;border-radius:99px;letter-spacing:.04em}
-.b-on{background:var(--grn);color:#04120a;animation:pulse 1.2s infinite}
-.b-idle{background:var(--line);color:var(--mut)}
-@keyframes pulse{50%{opacity:.55}}
-.now{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-family:ui-monospace,monospace;font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.now b{color:var(--grn)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-.stat b{font-size:24px;display:block}
-.stat span{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.s-a b{color:var(--grn)}.s-i b{color:var(--vio)}.s-l b{color:var(--amb)}.s-f b{color:var(--red)}.s-t b{color:var(--blu)}.s-tot b{color:var(--ink)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
-.pbar{height:9px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 6px}
-.pbar>div{height:100%;width:0%;background:linear-gradient(90deg,var(--grn),var(--blu));transition:width .5s}
-.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-button{border:0;border-radius:12px;padding:12px 18px;font-weight:700;font-size:13px;cursor:pointer;color:#fff;transition:.15s}
-button:hover{filter:brightness(1.15)}
-button:disabled{opacity:.45}
-.b-new{background:#0e7a4f}.b-full{background:#1f6feb}.b-stop{background:#7a1f2b}.b-csv{background:#333;color:var(--ink)}
-input[type=text]{width:100%;background:#0b100d;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 13px;font-size:14px;outline:none;margin-bottom:10px}
-input:focus{border-color:var(--grn)}
-.fbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.fb{background:var(--card);color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:6px 16px;font-size:12px;cursor:pointer}
-.fb.on{background:var(--grn);color:#04120a;border-color:var(--grn);font-weight:700}
-.tbl{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:14px}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
-th{position:sticky;top:0;background:var(--card2);color:var(--mut);text-transform:uppercase;font-size:10px;letter-spacing:.06em;padding:10px;text-align:left;border-bottom:1px solid var(--line)}
-td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.mono{font-family:ui-monospace,monospace;font-size:11px}
-.st{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap}
-.st-a{background:rgba(61,220,132,.14);color:var(--grn)}
-.st-t{background:rgba(77,159,255,.14);color:var(--blu)}
-.st-i{background:rgba(160,107,255,.14);color:var(--vio)}
-.st-l{background:rgba(255,201,77,.14);color:var(--amb)}
-.st-f{background:rgba(255,92,108,.14);color:var(--red)}
-.lat-f{color:var(--grn);font-weight:700}.lat-m{color:var(--amb)}.lat-s{color:var(--red)}
-.rep{color:var(--mut);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.log{background:#060a08;border:1px solid var(--line);border-radius:12px;padding:10px;font-family:ui-monospace,monospace;font-size:11px;color:var(--mut);max-height:150px;overflow:auto;margin-top:14px}
-.sub{color:var(--mut);font-size:12px}
-</style></head><body>
-<div class="wrap">
-<header>
-  <h1><span class="z">ZYVO</span> · Model Control Center</h1>
-  <span id="badge" class="badge b-idle">IDLE</span>
-</header>
-<div class="sub" style="margin-bottom:10px">একটা একটা করে গভীরভাবে পরীক্ষা — latency, উত্তর, error সব লাইভ। নতুন provider add করলে ১৫ মিনিটে নিজেই ধরবে।</div>
-<div class="now">🔬 এখন পরীক্ষা চলছে: <b id="nowT">—</b></div>
-<div class="stats">
-  <div class="stat s-tot"><b id="c-tot">0</b><span>Total</span></div>
-  <div class="stat s-a"><b id="c-act">0</b><span>✓ Active</span></div>
-  <div class="stat s-i"><b id="c-img">0</b><span>🎨 Image</span></div>
-  <div class="stat s-l"><b id="c-lim">0</b><span>⏳ Limit</span></div>
-  <div class="stat s-f"><b id="c-fail">0</b><span>Unusable</span></div>
-  <div class="stat s-t"><b id="c-run">0</b><span>Left</span></div>
+  :root {
+    --bg:#0a0e14; --card:#11161f; --card2:#161d29; --border:#1e2735;
+    --blue:#4d9fff; --green:#3ddc84; --red:#ff5c6c; --yellow:#ffc94d; --purple:#a06bff;
+    --text:#e8eef7; --muted:#7d8ba0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
+  body { background:var(--bg); color:var(--text); min-height:100vh; }
+  .header {
+    background:linear-gradient(135deg,#0f1724 0%,#16213a 100%);
+    border-bottom:1px solid var(--border); padding:22px 20px; text-align:center;
+  }
+  .header h1 { font-size:28px; background:linear-gradient(90deg,#4d9fff,#a06bff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .header p { color:var(--muted); margin-top:5px; font-size:13px; }
+  .header .live { margin-top:10px; }
+  .container { max-width:1100px; margin:0 auto; padding:22px 16px 60px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:18px; box-shadow:0 4px 20px rgba(0,0,0,.3); }
+  .card-title { font-size:15px; font-weight:bold; color:var(--blue); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .card-title::before { content:''; width:4px; height:16px; background:var(--blue); border-radius:2px; }
+  .btns { display:flex; gap:10px; flex-wrap:wrap; }
+  .btn { border:none; border-radius:10px; padding:12px 22px; font-size:14px; font-weight:bold; cursor:pointer; transition:.2s; color:#fff; }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.35); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+  .b-full { background:linear-gradient(135deg,#1f6feb,#4d9fff); }
+  .b-new { background:linear-gradient(135deg,#7b3ff2,#a06bff); }
+  .b-stop { background:linear-gradient(135deg,#d32f3f,#ff5c6c); }
+  .b-csv { background:linear-gradient(135deg,#0d7a4f,#3ddc84); color:#04120a; }
+  .b-copy { background:linear-gradient(135deg,#8a6d1a,#ffc94d); color:#1a1400; }
+  .now { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 14px; margin-bottom:14px; font-family:Consolas,monospace; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .now b { color:var(--grn,#3ddc84); }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
+  .stat { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 10px; text-align:center; position:relative; overflow:hidden; }
+  .stat::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .c-tot::after { background:var(--blue); } .c-ok::after { background:var(--green); }
+  .c-img::after { background:var(--purple); } .c-lim::after { background:var(--yellow); }
+  .c-fail::after { background:var(--red); } .c-run::after { background:#a06bff; }
+  .stat .num { font-size:26px; font-weight:800; }
+  .stat .lbl { font-size:11px; color:var(--muted); margin-top:3px; }
+  .pwrap { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .pinfo { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:7px; }
+  .pbar { height:10px; background:var(--bg); border-radius:6px; overflow:hidden; }
+  .pfill { height:100%; width:0%; background:linear-gradient(90deg,#1f6feb,#a06bff); border-radius:6px; transition:width .4s; }
+  input[type=text] { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:11px 13px; font-size:14px; outline:none; margin-bottom:12px; }
+  input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(77,159,255,.12); }
+  .fbtns { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .fb { background:var(--card); color:var(--muted); border:1px solid var(--border); padding:7px 18px; border-radius:24px; font-size:13px; cursor:pointer; transition:.2s; }
+  .fb:hover { color:var(--text); border-color:var(--blue); }
+  .fb.on { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .tbl-wrap { max-height:600px; overflow:auto; border:1px solid var(--border); border-radius:14px; background:var(--card); }
+  .tbl-wrap::-webkit-scrollbar { width:8px; } .tbl-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
+  th { background:var(--card2); color:var(--blue); padding:12px 11px; text-align:left; border-bottom:2px solid var(--border); position:sticky; top:0; z-index:2; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+  td { padding:10px 11px; border-bottom:1px solid var(--border); }
+  tbody tr { transition:background .15s; cursor:pointer; }
+  tbody tr:hover { background:rgba(77,159,255,.06); }
+  tr.r-ok { border-left:3px solid var(--green); } tr.r-fail { border-left:3px solid var(--red); }
+  tr.r-run { border-left:3px solid var(--purple); background:rgba(160,107,255,.05); }
+  tr.r-img { border-left:3px solid var(--purple); } tr.r-lim { border-left:3px solid var(--yellow); }
+  .badge { padding:4px 11px; border-radius:20px; font-size:11px; font-weight:bold; display:inline-block; white-space:nowrap; }
+  .b-ok { background:rgba(61,220,132,.12); color:var(--green); border:1px solid rgba(61,220,132,.3); }
+  .b-fail { background:rgba(255,92,108,.12); color:var(--red); border:1px solid rgba(255,92,108,.3); }
+  .b-lim { background:rgba(255,201,77,.12); color:var(--yellow); border:1px solid rgba(255,201,77,.3); }
+  .b-img { background:rgba(160,107,255,.12); color:var(--purple); border:1px solid rgba(160,107,255,.3); }
+  .b-run { background:rgba(77,159,255,.12); color:var(--blue); border:1px solid rgba(77,159,255,.3); }
+  .lat-f { color:var(--green); font-weight:bold; } .lat-m { color:var(--yellow); font-weight:bold; } .lat-s { color:var(--red); font-weight:bold; }
+  .snip { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-family:Consolas,monospace; font-size:12px; }
+  .mname { font-weight:600; font-size:12px; word-break:break-all; }
+  .empty { text-align:center; color:var(--muted); padding:36px; }
+  .logbox { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px; font-family:Consolas,monospace; font-size:11px; color:var(--muted); max-height:140px; overflow-y:auto; margin-top:12px; }
+  .logbox div { padding:2px 0; word-break:break-all; }
+  /* modal — উত্তর দেখার জায়গা */
+  .ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:50; padding:20px; overflow-y:auto; }
+  .ov.open { display:block; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:40px auto; padding:22px; }
+  .modal h3 { color:var(--blue); font-size:16px; margin-bottom:14px; word-break:break-all; }
+  .mrow { display:flex; gap:10px; margin-bottom:9px; font-size:13px; }
+  .mrow .k { color:var(--muted); min-width:110px; }
+  .mrow .v { word-break:break-all; }
+  .ansbox { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:13px; font-family:Consolas,monospace; font-size:12.5px; white-space:pre-wrap; word-break:break-word; max-height:260px; overflow-y:auto; color:var(--text); }
+  .closex { float:right; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
+  .badge { padding:3px 11px; border-radius:20px; font-size:11px; font-weight:bold; display:inline-block; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤖 ZYVO · Model Control Center</h1>
+  <p>প্রতিটা model একটা একটা করে গভীরভাবে পরীক্ষা — latency, উত্তর, error সব লাইভ</p>
+  <div class="live"><span id="badge" class="badge b-run">লোড হচ্ছে…</span></div>
 </div>
-<div class="card">
-  <div class="pmeta"><span id="kind">—</span><span id="pct">0%</span></div>
-  <div class="pbar"><div id="bar"></div></div>
-  <div class="pmeta"><span id="done">0</span> probed · <span id="left">0</span> left</div>
-  <div class="btns">
-    <button class="b-new" onclick="go('/scan/new')">🆕 নতুন model scan</button>
-    <button class="b-full" onclick="go('/scan/full')">🔄 Full rescan</button>
-    <button class="b-stop" onclick="go('/scan/stop')">⏹ Stop</button>
-    <button class="b-csv" onclick="csv()">📥 CSV</button>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">🎛️ নিয়ন্ত্রণ</div>
+    <div class="now">🔬 এখন পরীক্ষা চলছে: <b id="nowT">—</b></div>
+    <div class="btns">
+      <button class="btn b-new" onclick="go('/scan/new')">🆕 নতুন model scan</button>
+      <button class="btn b-full" onclick="go('/scan/full')">🔄 Full Rescan</button>
+      <button class="btn b-stop" onclick="go('/scan/stop')">⏹️ থামাও</button>
+    </div>
+    <div class="btns">
+      <button class="btn b-csv" onclick="csv()">📥 CSV ডাউনলোড</button>
+      <button class="btn b-copy" onclick="copyList('active')">📋 Active কপি</button>
+      <button class="btn b-copy" style="background:linear-gradient(135deg,#5a3ea8,#8f6fff);color:#fff" onclick="copyList('fail')">📋 Fail কপি</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat c-tot"><div class="num" id="c-tot" style="color:var(--blue)">0</div><div class="lbl">মোট মডেল</div></div>
+    <div class="stat c-ok"><div class="num" id="c-act" style="color:var(--green)">0</div><div class="lbl">✅ Active</div></div>
+    <div class="stat c-img"><div class="num" id="c-img" style="color:var(--purple)">0</div><div class="lbl">🎨 Image</div></div>
+    <div class="stat c-lim"><div class="num" id="c-lim" style="color:var(--yellow)">0</div><div class="lbl">⏳ Limit</div></div>
+    <div class="stat c-fail"><div class="num" id="c-fail" style="color:var(--red)">0</div><div class="lbl">❌ সমস্যা</div></div>
+    <div class="stat c-run"><div class="num" id="c-left" style="color:#a06bff">0</div><div class="lbl">🕐 বাকি</div></div>
+  </div>
+
+  <div class="pwrap">
+    <div class="pinfo"><span id="pinfo">—</span><span id="pct">0%</span></div>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  </div>
+
+  <input type="text" id="q" placeholder="🔍 খুঁজো… (model নাম লিখলেই ফিল্টার)" oninput="render()">
+  <div class="fbtns">
+    <button class="fb on" data-f="all" onclick="setF('all',this)">সব</button>
+    <button class="fb" data-f="active" onclick="setF('active',this)">✅ Active</button>
+    <button class="fb" data-f="image" onclick="setF('image',this)">🎨 Image</button>
+    <button class="fb" data-f="limit" onclick="setF('limit',this)">⏳ Limit</button>
+    <button class="fb" data-f="testing" onclick="setF('testing',this)">⏳ চলছে</button>
+    <button class="fb" data-f="bad" onclick="setF('bad',this)">❌ সমস্যা</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>মডেল</th><th>স্ট্যাটাস</th><th>⚡ Latency</th><th>উত্তর / কারণ</th></tr></thead>
+      <tbody id="tb"><tr><td colspan="5" class="empty">লোড হচ্ছে…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">📜 স্ক্যানার লগ</div>
+    <div class="logbox" id="lg"><div>লোড হচ্ছে…</div></div>
   </div>
 </div>
-<input type="text" id="q" placeholder="🔍 খুঁজো… (model নাম লিখলেই ফিল্টার হবে)" oninput="render()">
-<div class="fbtns">
-  <button class="fb on" data-f="all" onclick="setF('all',this)">সব</button>
-  <button class="fb" data-f="active" onclick="setF('active',this)">✓ Active</button>
-  <button class="fb" data-f="image" onclick="setF('image',this)">🎨 Image</button>
-  <button class="fb" data-f="limit" onclick="setF('limit',this)">⏳ Limit</button>
-  <button class="fb" data-f="bad" onclick="setF('bad',this)">❌ Unusable</button>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeM()">
+  <div class="modal">
+    <button class="closex" onclick="closeM()">✕</button>
+    <h3 id="mName">—</h3>
+    <div class="mrow"><span class="k">স্ট্যাটাস</span><span class="v" id="mStatus">—</span></div>
+    <div class="mrow"><span class="k">⚡ Latency</span><span class="v" id="mLat">—</span></div>
+    <div class="mrow"><span class="k">ℹ️ তথ্য</span><span class="v" id="mLabel">—</span></div>
+    <div class="mrow"><span class="k">🕐 শেষ পরীক্ষা</span><span class="v" id="mTime">—</span></div>
+    <div class="mrow"><span class="k">উত্তর / কারণ</span></div>
+    <div class="ansbox" id="mAns">—</div>
+  </div>
 </div>
-<div class="tbl"><table>
-<thead><tr><th>#</th><th>Model</th><th>Status</th><th>⚡</th><th>উত্তর / কারণ</th></tr></thead>
-<tbody id="tb"><tr><td colspan="5" class="sub">লোড হচ্ছে…</td></tr></tbody>
-</table></div>
-<div class="log" id="lg"></div>
-</div>
+
 <script>
-let DATA={detail:[]},F='all'
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-const $=i=>document.getElementById(i)
-const BAD={hanging:'⏱ Timeout',noaccess:'🚫 No access',paid:'💳 Paid',gone:'❌ Gone',nonchat:'🚫 Non-chat',testing:'⏳ Testing',limit:'⏳ Limit',image:'🎨 Image',active:'✓ Active'}
+let DATA = {detail:[]}, F = 'all', Q = ''
+const $ = i => document.getElementById(i)
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')
+
 async function tick(){
   try{
-    const d=await(await fetch('/scan/results')).json()
-    DATA=d
-    const c=d.counts||{}
-    $('c-tot').textContent=d.detail.length
-    $('c-act').textContent=c.active||0
-    $('c-img').textContent=c.image||0
-    $('c-lim').textContent=c['daily-limit']||0
-    $('c-fail').textContent=(c.hanging||0)+(c['no-access']||0)+(c.paid||0)+(c.gone||0)+(c['non-chat']||0)
-    const run=d.runTotal?(d.runTotal-(d.runDone||0)):0
-    $('c-run').textContent=run
-    const b=$('badge')
-    if(d.scanning){b.textContent='SCANNING: '+d.scanning.toUpperCase();b.className='badge b-on'}
-    else{b.textContent='IDLE';b.className='badge b-idle'}
-    $('nowT').textContent=d.nowTesting||'—'
-    $('kind').textContent=d.scanning?('scan: '+d.scanning):'শেষ scan: '+(d.updatedAt?new Date(d.updatedAt).toLocaleString():'—')
-    const tot=d.runTotal||d.detail.length,pct=d.runTotal?Math.min(100,Math.round((d.runDone||0)/d.runTotal*100)):100
-    $('bar').style.width=pct+'%';$('pct').textContent=pct+'%'
-    $('done').textContent=d.runDone||d.detail.length;$('left').textContent=run
-    const lg=$('lg');lg.innerHTML=(d.log||[]).map(l=>'<div>'+esc(l)+'</div>').join('');lg.scrollTop=0
+    const d = await (await fetch('/scan/results')).json()
+    DATA = d
+    const c = d.counts || {}
+    $('c-tot').textContent = d.detail.length
+    $('c-act').textContent = c.active || 0
+    $('c-img').textContent = c.image || 0
+    $('c-lim').textContent = c['daily-limit'] || 0
+    $('c-fail').textContent = (c.hanging||0)+(c['no-access']||0)+(c.paid||0)+(c.gone||0)+(c['non-chat']||0)
+    $('c-left').textContent = d.runTotal ? Math.max(0, d.runTotal-(d.runDone||0)) : 0
+    const b = $('badge')
+    if (d.scanning){ b.textContent='🟢 SCANNING: '+d.scanning.toUpperCase(); b.className='badge b-run' }
+    else { b.textContent='⚪ IDLE — scan শেষ '+ (d.updatedAt? new Date(d.updatedAt).toLocaleTimeString():''); b.className='badge b-lim' }
+    $('nowT').textContent = d.nowTesting || '— (এই মুহূর্তে কোনো টেস্ট চলছে না)'
+    const tot = d.runTotal || d.detail.length
+    const done = d.runDone ?? d.detail.length
+    const pct = tot ? Math.min(100, Math.round(done/tot*100)) : 0
+    $('pfill').style.width = pct+'%'
+    $('pct').textContent = pct+'%'
+    $('pinfo').textContent = 'পরীক্ষা হয়েছে: '+done+' / '+tot
+    const lg = $('lg')
+    lg.innerHTML = (d.log||[]).map(l=>'<div>'+esc(l)+'</div>').join('')
+    lg.scrollTop = 0
     render()
-  }catch(e){$('nowT').textContent='(gateway unreachable)'}
+  }catch(e){ $('badge').textContent='⚠️ gateway offline' }
 }
+function go(u){ fetch(u,{method:'POST'}).then(()=>setTimeout(tick,800)) }
+function setF(f,el){ F=f; document.querySelectorAll('.fb').forEach(x=>x.classList.remove('on')); el.classList.add('on'); render() }
+
 function bucket(s){
-  if(s==='active')return'active'
-  if(s==='image')return'image'
-  if(s==='daily-limit')return'limit'
-  if(['testing'].includes(s))return'testing'
-  if(['hanging','no-access','paid','gone','non-chat'].includes(s))return'bad'
-  return'other'
+  if(s==='active') return 'active'
+  if(s==='image') return 'image'
+  if(s==='daily-limit') return 'limit'
+  if(s==='testing') return 'testing'
+  return 'bad'
 }
+const BN = {active:['b-ok','✅ Active'],fail:['b-fail','❌ সমস্যা'],limit:['b-lim','⏳ Limit'],image:['b-img','🎨 Image'],testing:['b-run','⏳ চলছে'],bad:['b-fail','❌ সমস্যা']}
+
 function render(){
-  const q=($('q').value||'').toLowerCase()
-  let rows=DATA.detail.filter(r=>F==='all'||bucket(r.status)===F)
-  if(q)rows=rows.filter(r=>r.id.toLowerCase().includes(q)||r.name.toLowerCase().includes(q))
-  const order={testing:0,active:1,image:2,'daily-limit':3,hanging:4,'no-access':5,paid:6,gone:7,'non-chat':8}
-  rows.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||a.id.localeCompare(b.id))
-  $('tb').innerHTML=rows.length?rows.map((r,i)=>{
-    const b=bucket(r.status)
-    const cls=b==='active'?'st-a':b==='image'?'st-i':b==='limit'?'st-l':b==='testing'?'st-t':b==='bad'?'st-f':'st-l'
-    const lat=r.latency!=null?('<span class="'+(r.latency<2000?'lat-f':r.latency<8000?'lat-m':'lat-s')+'">'+r.latency+'ms</span>'):'—'
-    const why=esc(r.reply||r.label||'')
-    return '<tr><td class="mono">'+(i+1)+'</td><td class="mono">'+esc(r.id)+'</td>'+
-      '<td><span class="st '+cls+'">'+(BAD[b]||r.status)+'</span></td><td>'+lat+'</td><td class="rep">'+why+'</td></tr>'
-  }).join(''):'<tr><td colspan="5" class="sub">— কিছু নেই —</td></tr>'
+  const q = Q.toLowerCase()
+  let rows = DATA.detail.filter(r => F==='all' || bucket(r.status)===F)
+  if (q) rows = rows.filter(r => (r.id+' '+r.name+' '+(r.label||'')).toLowerCase().includes(q))
+  const ord = {testing:0, active:1, image:2, 'daily-limit':3, hanging:4, 'no-access':5, paid:6, gone:7, 'non-chat':8}
+  rows.sort((a,b)=>(ord[a.status]??9)-(ord[b.status]??9) || a.id.localeCompare(b.id))
+  $('tb').innerHTML = rows.length ? rows.map((r,i)=>{
+    const b = bucket(r.status)
+    const [cls, txt] = BN[b] || ['b-fail', r.status]
+    const lat = r.latency!=null ? '<span class="'+(r.latency<2000?'lat-f':r.latency<8000?'lat-m':'lat-s')+'">'+r.latency+' ms</span>' : '—'
+    const why = esc((r.reply || r.label || '—').slice(0,80))
+    return '<tr class="r-'+b+'" onclick="openM(\''+esc(r.id).replace(/'/g,"\\'")+'\')">'+
+      '<td>'+(i+1)+'</td><td class="mname">'+esc(r.id)+'</td>'+
+      '<td><span class="badge '+cls+'">'+txt+'</span></td><td>'+lat+'</td><td class="snip">'+why+'</td></tr>'
+  }).join('') : '<tr><td colspan="5" class="empty">— এই ফিল্টারে কিছু নেই —</td></tr>'
 }
-function setF(f,el){F=f;document.querySelectorAll('.fb').forEach(x=>x.classList.remove('on'));el.classList.add('on');render()}
-async function go(u){await fetch(u,{method:'POST'});tick()}
+
+let CUR = null
+function openM(id){
+  const r = DATA.detail.find(x=>x.id===id)
+  if(!r) return
+  CUR = r
+  $('mName').textContent = r.id
+  $('mStatus').innerHTML = '<span class="badge '+(BN[bucket(r.status)]||['b-fail',r.status])[0]+'">'+(BN[bucket(r.status)]||['',r.status])[1]+'</span>'
+  $('mLat').textContent = r.latency!=null ? r.latency+' ms' : '—'
+  $('mLabel').textContent = r.label || '—'
+  $('mTime').textContent = r.lastChecked ? new Date(r.lastChecked).toLocaleString() : '—'
+  $('mAns').textContent = r.reply || r.error || r.label || '—'
+  $('ov').classList.add('open')
+}
+function closeM(){ $('ov').classList.remove('open') }
+
 function csv(){
-  const rows=[['Model','Status','Latency_ms','Info']].concat(DATA.detail.map(r=>[r.id,r.status,r.latency||'',(r.reply||r.label||'').replace(/"/g,"'")]))
-  const blob=new Blob([rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\\n')],{type:'text/csv'})
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zyvo-models.csv';a.click()
+  if(!DATA.detail.length){ alert('কোনো ডেটা নেই'); return }
+  let c = 'Model,Status,Latency_ms,Info\n'
+  DATA.detail.forEach(r=>{ c += '"'+r.id+'","'+r.status+'","'+(r.latency||'')+'","'+String(r.reply||r.label||'').replace(/"/g,"'")+'"\n' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([c],{type:'text/csv;charset=utf-8'}))
+  a.download = 'zyvo-models-' + new Date().toISOString().slice(0,10) + '.csv'; a.click()
 }
-tick();setInterval(tick,3000)
-</script></body></html>`
+function copyList(which){
+  let ids
+  if(which==='active') ids = DATA.detail.filter(r=>r.status==='active').map(r=>r.id)
+  else ids = DATA.detail.filter(r=>bucket(r.status)==='bad').map(r=>r.id+'  ['+(r.label||'') +']')
+  if(!ids.length){ alert('তালিকা খালি'); return }
+  navigator.clipboard.writeText(ids.join('\n')).then(()=>alert('📋 '+ids.length+' টা কপি হয়েছে!'))
+}
+tick(); setInterval(tick, 3000)
+</script>
+</body>
+</html>
+`
 
 // ── http server: scanner routes + proxy ────────────────────────────
 const send = (res, code, obj) => {
