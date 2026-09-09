@@ -325,6 +325,7 @@ li small{color:#8A8A8E}
   </div>
   <div class="pbar"><div id="bar"></div></div>
   <div class="sub"><span id="probed">0</span> / <span id="total">0</span> models probed</div>
+  <button onclick="scannew()">&#127881; Scan New Models (নতুন provider)</button>
   <button onclick="rescan()">&#x1f504; Full Rescan</button>
 </div>
 <div class="grid">
@@ -370,6 +371,7 @@ async function refresh(){
   }catch(e){ document.getElementById('badge').textContent = 'offline…' }
 }
 async function rescan(){ await fetch('/scan/full', {method:'POST'}); refresh() }
+async function scannew(){ await fetch('/scan/new', {method:'POST'}); refresh() }
 refresh(); setInterval(refresh, 8000)
 </script></body></html>`
 
@@ -483,6 +485,10 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && (req.url === "/scan" || req.url === "/scan/")) {
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
     return res.end(GUI_HTML)
+  }
+  if (req.method === "POST" && req.url.startsWith("/scan/new")) {
+    if (!state.scanning) setTimeout(catalogScan, 10)
+    return send(202, { started: true })
   }
   if (req.method === "POST" && req.url.startsWith("/scan/full")) {
     if (!state.scanning) setTimeout(fullScan, 10)
