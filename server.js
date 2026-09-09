@@ -353,9 +353,10 @@ const activeModelsPayload = () => {
 }
 
 const zyvoConfigPayload = (host) => {
+  // ALWAYS serve — even with zero models — so credentials auto-load everywhere;
+  // the phone wrapper refuses empty model lists on its side
   const entries = Object.entries(state.models)
     .filter(([, v]) => ["active", "daily-limit", "image"].includes(v.status))
-  if (!entries.length) return null
   const models = {}
   for (const [id, v] of entries) {
     const name = v.status === "daily-limit" ? `${prettyName(id)} · ⏳ ${v.label}` : prettyName(id)
@@ -364,7 +365,7 @@ const zyvoConfigPayload = (host) => {
   const first = entries.find(([, v]) => v.status === "active")
   return {
     $schema: "https://opencode.ai/config.json",
-    model: `zyvo/omniroute/${first ? first[0] : entries[0][0]}`,
+    model: `zyvo/omniroute/${first ? first[0] : "auto/best-coding"}`,
     provider: {
       zyvo: {
         name: "Zyvo",
@@ -929,7 +930,7 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && u.startsWith("/zyvo-config")) {
     const host = req.headers.host || ""
     const cfg = zyvoConfigPayload(host)
-    return cfg ? send(res, 200, cfg) : send(res, 503, { error: "no active models yet — run a scan first" })
+    return send(res, 200, zyvoConfigPayload(host))
   }
   if (req.method === "POST" && u.startsWith("/scan/full")) { if (!state.scanning) fullScan(); return send(res, 202, { started: !state.scanning ? "full" : "busy" }) }
   if (req.method === "POST" && u.startsWith("/scan/new")) { if (!state.scanning) newScan(); return send(res, 202, { started: !state.scanning ? "new" : "busy" }) }
