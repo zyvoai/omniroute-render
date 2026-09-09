@@ -32,7 +32,7 @@ const GATEWAY_DATA = process.env.DATA_DIR
 const STATE_FILE = path.join(GATEWAY_DATA, "state.json")
 const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local OmniRoute
 const PROBE_TOKENS = 5
-const PROBE_TIMEOUT_MS = 30_000 // dead upstreams die fast; live models answer before this
+const PROBE_TIMEOUT_MS = 50_000 // slow free upstreams take 30-60s to first byte
 const CONCURRENCY = 2 // heap ceiling is 1GB now — P=2 is safe and 2x faster
 const ACTIVE_EVERY_MS = 3 * 60 * 60 * 1000
 const DAILY_EVERY_MS = 24 * 60 * 60 * 1000
@@ -77,8 +77,10 @@ const child = spawn(process.execPath, ["node_modules/omniroute/dist/server-ws.mj
     HOSTNAME: "0.0.0.0",
     NODE_ENV: "production",
     DATA_DIR: CHILD_DATA,
-    // official image default — without a raised ceiling omniroute's own
-    // pressure guard trips at ~416MB and 503s every request
+    // BOTH matter: NODE_OPTIONS raises V8's heap ceiling, OMNIROUTE_MEMORY_MB
+    // is what omniroute's own resource-pressure guard reads — miss either and
+    // it 503s every request at ~416MB
+    OMNIROUTE_MEMORY_MB: "1024",
     NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"]
       .filter(Boolean)
       .join(" "),
@@ -184,10 +186,14 @@ async function scanIds(ids, kind) {
         }
       }
       const prev = state.models[id]
-      // hanging needs 2 strikes before it loses active status
-      if (status === "hanging" && prev?.status === "active") {
-        state.models[id] = { ...prev, strikes: (prev.strikes || 0) + 1, lastChecked: Date.now() }
-        if (state.models[id].strikes < 2) continue
+      // hanging needs 2 strikes for EVERY model — slow-but-alive upstreams
+      // often exceed one timeout and must not be buried on a single miss
+      if (status === "hanging") {
+        const strikes = (prev?.strikes || 0) + 1
+        if (prev?.status !== "hanging" || strikes < 2) {
+          state.models[id] = { ...prev, status: prev?.status || "hanging", label: prev?.label || "Checking…", strikes, lastChecked: Date.now() }
+          continue
+        }
       }
       state.models[id] = { status, label, lastChecked: Date.now(), strikes: 0 }
       if (prev?.status !== status) note(`${id}: ${prev?.status || "new"} -> ${status} (${code})`)
