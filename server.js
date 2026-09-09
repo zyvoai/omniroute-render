@@ -328,6 +328,8 @@ li small{color:#8A8A8E}
 <ul id="active"></ul>
 <h2>&#9203; Daily limit reached (রোজ recheck হয়)</h2>
 <ul id="limit"></ul>
+<h2>&#127912; Image generation models</h2>
+<ul id="image"></ul>
 <h2>&#10060; Not usable</h2>
 <ul id="other"></ul>
 <script>
