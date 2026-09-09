@@ -447,6 +447,7 @@ const server = http.createServer((req, res) => {
 })
 
 load()
+state.scanning = null // fresh process — a persisted mid-scan flag would block all scans
 server.listen(PORT, () => console.log(`[gateway] listening on :${PORT}, omniroute on :${UPSTREAM_PORT}`))
 
 // auto-detect: every 15 min diff the catalog — newly added provider models
