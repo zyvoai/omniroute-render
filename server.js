@@ -24,8 +24,12 @@ import path from "node:path"
 const PORT = Number(process.env.PORT || 10000)
 const UPSTREAM_HOST = "127.0.0.1"
 const UPSTREAM_PORT = Number(process.env.UPSTREAM_PORT || 20128)
-const DATA_DIR = path.join(process.cwd(), "data")
-const STATE_FILE = path.join(DATA_DIR, "state.json")
+// Railway volume mounts at DATA_DIR (/app/data) — everything under it
+// survives redeploys, so providers + scan state never reset again
+const GATEWAY_DATA = process.env.DATA_DIR
+  ? path.join(process.env.DATA_DIR, "gateway")
+  : path.join(process.cwd(), "data")
+const STATE_FILE = path.join(GATEWAY_DATA, "state.json")
 const SCAN_KEY = process.env.OMNIROUTE_API_KEY || "" // key for probing local OmniRoute
 const PROBE_TOKENS = 5
 const PROBE_TIMEOUT_MS = 45_000
@@ -51,7 +55,7 @@ const load = () => {
 }
 const save = () => {
   try {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
+    fs.mkdirSync(GATEWAY_DATA, { recursive: true })
     fs.writeFileSync(STATE_FILE + ".tmp", JSON.stringify(state))
     fs.renameSync(STATE_FILE + ".tmp", STATE_FILE)
   } catch {}
@@ -64,7 +68,7 @@ const note = (m) => {
 // ── start OmniRoute child ──────────────────────────────────────────
 // Env mirrors the official Docker image (DATA_DIR/HOSTNAME matter for a
 // fresh boot — without DATA_DIR the child can hang before listening).
-const CHILD_DATA = path.join(process.cwd(), "data", "omniroute")
+const CHILD_DATA = path.join(GATEWAY_DATA, "omniroute")
 fs.mkdirSync(CHILD_DATA, { recursive: true })
 const child = spawn(process.execPath, ["node_modules/omniroute/dist/server-ws.mjs"], {
   env: {
@@ -119,6 +123,33 @@ const probe = (id) =>
     req.end(body)
   })
 
+// chat probe 400 দিলে মডেলটা হয়তো image-gen — সেভাবেই টেস্ট করি
+const probeImage = (id) =>
+  new Promise((resolve) => {
+    const body = JSON.stringify({ model: id, prompt: "a small red circle", n: 1 })
+    const req = http.request(
+      {
+        host: UPSTREAM_HOST,
+        port: UPSTREAM_PORT,
+        path: "/v1/images/generations",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          ...(SCAN_KEY ? { Authorization: `Bearer ${SCAN_KEY}` } : {}),
+        },
+        timeout: 90_000, // image gen is slow
+      },
+      (res) => {
+        res.resume()
+        res.on("end", () => resolve(res.statusCode))
+      }
+    )
+    req.on("timeout", () => req.destroy())
+    req.on("error", () => resolve(0))
+    req.end(body)
+  })
+
 const classify = (code) => {
   if (code === 200) return { status: "active", label: "" }
   if (code === 429) return { status: "daily-limit", label: "Daily limit reached" }
@@ -140,7 +171,18 @@ async function scanIds(ids, kind) {
     while (queue.length) {
       const id = queue.shift()
       const code = await probe(id)
-      const { status, label } = classify(code)
+      let { status, label } = classify(code)
+      // chat 400 = হয়তো non-chat model — image generation দিয়ে চেষ্টা করি
+      if (code === 400) {
+        const img = await probeImage(id)
+        if (img === 200) {
+          status = "image"
+          label = "Image generation model"
+        } else {
+          status = "non-chat"
+          label = "Non-chat model (400)"
+        }
+      }
       const prev = state.models[id]
       // hanging needs 2 strikes before it loses active status
       if (status === "hanging" && prev?.status === "active") {
@@ -223,6 +265,9 @@ const activeModelsPayload = () => {
   const limited = entries
     .filter(([, v]) => v.status === "daily-limit")
     .map(([id, v]) => ({ id, name: `${prettyName(id)} · ⏳ ${v.label}`, status: "daily-limit" }))
+  const image = entries
+    .filter(([, v]) => v.status === "image")
+    .map(([id]) => ({ id, name: `${prettyName(id)} · 🎨 image`, status: "image" }))
   const counts = {}
   for (const [, v] of entries) counts[v.status] = (counts[v.status] || 0) + 1
   return {
@@ -231,6 +276,7 @@ const activeModelsPayload = () => {
     scanning: state.scanning,
     counts,
     models: [...active, ...limited],
+    image,
   }
 }
 
@@ -307,7 +353,8 @@ async function refresh(){
       '<li class="mono">' + esc(x.id) + (x.label ? ' <small>' + esc(x.label) + '</small>' : '') + '</li>').join('') : '<li class="sub">— none —</li>' }
     put('active', det.filter(x => x.status === 'active'))
     put('limit', det.filter(x => x.status === 'daily-limit'))
-    put('other', det.filter(x => !['active','daily-limit'].includes(x.status)))
+    put('image', det.filter(x => x.status === 'image'))
+    put('other', det.filter(x => !['active','daily-limit','image'].includes(x.status)))
   }catch(e){ document.getElementById('badge').textContent = 'offline…' }
 }
 async function rescan(){ await fetch('/scan/full', {method:'POST'}); refresh() }
