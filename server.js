@@ -377,12 +377,12 @@ const zyvoConfigPayload = (host) => {
 }
 
 // ── GUI ────────────────────────────────────────────────────────────
-const GUI_HTML = `<!doctype html>
+const GUI_HTML = `<!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZYVO · Model Control Center</title>
+<title>🤖 AI Model Tester Pro — Auto Fetch + Bulk Test</title>
 <style>
   :root {
     --bg:#0a0e14; --card:#11161f; --card2:#161d29; --border:#1e2735;
@@ -391,143 +391,237 @@ const GUI_HTML = `<!doctype html>
   }
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Tahoma,sans-serif; }
   body { background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ===== Header ===== */
   .header {
     background:linear-gradient(135deg,#0f1724 0%,#16213a 100%);
-    border-bottom:1px solid var(--border); padding:22px 20px; text-align:center;
+    border-bottom:1px solid var(--border); padding:25px 20px; text-align:center;
   }
-  .header h1 { font-size:28px; background:linear-gradient(90deg,#4d9fff,#a06bff); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .header p { color:var(--muted); margin-top:5px; font-size:13px; }
-  .header .live { margin-top:10px; }
-  .container { max-width:1100px; margin:0 auto; padding:22px 16px 60px; }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:18px; box-shadow:0 4px 20px rgba(0,0,0,.3); }
-  .card-title { font-size:15px; font-weight:bold; color:var(--blue); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-  .card-title::before { content:''; width:4px; height:16px; background:var(--blue); border-radius:2px; }
-  .btns { display:flex; gap:10px; flex-wrap:wrap; }
-  .btn { border:none; border-radius:10px; padding:12px 22px; font-size:14px; font-weight:bold; cursor:pointer; transition:.2s; color:#fff; }
-  .btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.35); }
-  .btn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
-  .b-full { background:linear-gradient(135deg,#1f6feb,#4d9fff); }
-  .b-new { background:linear-gradient(135deg,#7b3ff2,#a06bff); }
-  .b-stop { background:linear-gradient(135deg,#d32f3f,#ff5c6c); }
-  .b-csv { background:linear-gradient(135deg,#0d7a4f,#3ddc84); color:#04120a; }
-  .b-copy { background:linear-gradient(135deg,#8a6d1a,#ffc94d); color:#1a1400; }
-  .now { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 14px; margin-bottom:14px; font-family:Consolas,monospace; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .now b { color:var(--grn,#3ddc84); }
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
-  .stat { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 10px; text-align:center; position:relative; overflow:hidden; }
+  .header h1 { font-size:30px; background:linear-gradient(90deg,#4d9fff,#a06bff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .header p { color:var(--muted); margin-top:6px; font-size:14px; }
+  .container { max-width:1200px; margin:0 auto; padding:25px 20px 60px; }
+
+  /* ===== Cards ===== */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:22px; box-shadow:0 4px 20px rgba(0,0,0,.3); }
+  .card-title { font-size:16px; font-weight:bold; color:var(--blue); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .card-title::before { content:''; width:4px; height:18px; background:var(--blue); border-radius:2px; }
+
+  label { display:block; color:var(--muted); font-weight:bold; margin-bottom:6px; font-size:13px; }
+  input[type=text], input[type=password], textarea, select {
+    width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px; outline:none; transition:border .2s;
+  }
+  input:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(77,159,255,.12); }
+  textarea { min-height:140px; resize:vertical; font-family:'Consolas',monospace; font-size:13px; }
+
+  .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+
+  /* ===== Buttons ===== */
+  .btn { border:none; border-radius:10px; padding:12px 26px; font-size:15px; font-weight:bold; cursor:pointer; transition:.2s; color:#fff; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.35); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-primary { background:linear-gradient(135deg,#1f6feb,#4d9fff); }
+  .btn-fetch { background:linear-gradient(135deg,#7b3ff2,#a06bff); }
+  .btn-stop { background:linear-gradient(135deg,#d32f3f,#ff5c6c); }
+  .btn-export { background:linear-gradient(135deg,#0d7a4f,#3ddc84); color:#04120a; }
+  .btn-copy { background:linear-gradient(135deg,#8a6d1a,#ffc94d); color:#1a1400; }
+  .btn-group { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+
+  /* ===== Server scanner card ===== */
+  .srv-badge { padding:4px 14px; border-radius:20px; font-size:12px; font-weight:bold; display:inline-block; }
+  .srv-on { background:rgba(61,220,132,.12); color:var(--green); border:1px solid rgba(61,220,132,.3); }
+  .srv-idle { background:rgba(125,139,160,.12); color:var(--muted); border:1px solid var(--border); }
+  .srv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-bottom:14px; }
+  .srv-cell { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
+  .srv-cell b { font-size:20px; display:block; }
+  .srv-cell span { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .now-test { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px 13px; font-family:Consolas,monospace; font-size:12px; color:var(--muted); margin-bottom:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .now-test b { color:var(--green); }
+
+  /* ===== Stats ===== */
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; margin-bottom:20px; }
+  .stat { background:var(--card2); border:1px solid var(--border); border-radius:14px; padding:18px 12px; text-align:center; position:relative; overflow:hidden; }
   .stat::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
-  .c-tot::after { background:var(--blue); } .c-ok::after { background:var(--green); }
-  .c-img::after { background:var(--purple); } .c-lim::after { background:var(--yellow); }
-  .c-fail::after { background:var(--red); } .c-run::after { background:#a06bff; }
-  .stat .num { font-size:26px; font-weight:800; }
-  .stat .lbl { font-size:11px; color:var(--muted); margin-top:3px; }
-  .pwrap { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
-  .pinfo { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:7px; }
-  .pbar { height:10px; background:var(--bg); border-radius:6px; overflow:hidden; }
-  .pfill { height:100%; width:0%; background:linear-gradient(90deg,#1f6feb,#a06bff); border-radius:6px; transition:width .4s; }
-  input[type=text] { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:11px 13px; font-size:14px; outline:none; margin-bottom:12px; }
-  input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(77,159,255,.12); }
-  .fbtns { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-  .fb { background:var(--card); color:var(--muted); border:1px solid var(--border); padding:7px 18px; border-radius:24px; font-size:13px; cursor:pointer; transition:.2s; }
-  .fb:hover { color:var(--text); border-color:var(--blue); }
-  .fb.on { background:var(--blue); color:#fff; border-color:var(--blue); }
-  .tbl-wrap { max-height:600px; overflow:auto; border:1px solid var(--border); border-radius:14px; background:var(--card); }
-  .tbl-wrap::-webkit-scrollbar { width:8px; } .tbl-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; min-width:640px; }
-  th { background:var(--card2); color:var(--blue); padding:12px 11px; text-align:left; border-bottom:2px solid var(--border); position:sticky; top:0; z-index:2; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
-  td { padding:10px 11px; border-bottom:1px solid var(--border); }
-  tbody tr { transition:background .15s; cursor:pointer; }
+  .stat.c-total::after { background:var(--blue); } .stat.c-ok::after { background:var(--green); }
+  .stat.c-fail::after { background:var(--red); } .stat.c-run::after { background:var(--purple); }
+  .stat.c-wait::after { background:var(--yellow); }
+  .stat .num { font-size:30px; font-weight:800; }
+  .stat .lbl { font-size:12px; color:var(--muted); margin-top:4px; }
+
+  /* ===== Progress ===== */
+  .progress-wrap { background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin-bottom:20px; }
+  .progress-info { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .progress-bar { height:10px; background:var(--bg); border-radius:6px; overflow:hidden; }
+  .progress-fill { height:100%; width:0%; background:linear-gradient(90deg,#1f6feb,#a06bff); border-radius:6px; transition:width .35s; }
+
+  /* ===== Table ===== */
+  .filter-btns { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .fbtn { background:var(--card2); color:var(--muted); border:1px solid var(--border); padding:7px 18px; border-radius:24px; font-size:13px; cursor:pointer; transition:.2s; }
+  .fbtn:hover { color:var(--text); border-color:var(--blue); }
+  .fbtn.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+
+  .tbl-wrap { max-height:560px; overflow:auto; border:1px solid var(--border); border-radius:14px; background:var(--card); }
+  .tbl-wrap::-webkit-scrollbar { width:8px; height:8px; }
+  .tbl-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; min-width:700px; }
+  th { background:var(--card2); color:var(--blue); padding:13px 12px; text-align:left; border-bottom:2px solid var(--border); position:sticky; top:0; z-index:2; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  td { padding:11px 12px; border-bottom:1px solid var(--border); }
+  tbody tr { transition:background .15s; }
   tbody tr:hover { background:rgba(77,159,255,.06); }
-  tr.r-ok { border-left:3px solid var(--green); } tr.r-fail { border-left:3px solid var(--red); }
-  tr.r-run { border-left:3px solid var(--purple); background:rgba(160,107,255,.05); }
-  tr.r-img { border-left:3px solid var(--purple); } tr.r-lim { border-left:3px solid var(--yellow); }
-  .badge { padding:4px 11px; border-radius:20px; font-size:11px; font-weight:bold; display:inline-block; white-space:nowrap; }
-  .b-ok { background:rgba(61,220,132,.12); color:var(--green); border:1px solid rgba(61,220,132,.3); }
-  .b-fail { background:rgba(255,92,108,.12); color:var(--red); border:1px solid rgba(255,92,108,.3); }
-  .b-lim { background:rgba(255,201,77,.12); color:var(--yellow); border:1px solid rgba(255,201,77,.3); }
-  .b-img { background:rgba(160,107,255,.12); color:var(--purple); border:1px solid rgba(160,107,255,.3); }
-  .b-run { background:rgba(77,159,255,.12); color:var(--blue); border:1px solid rgba(77,159,255,.3); }
-  .lat-f { color:var(--green); font-weight:bold; } .lat-m { color:var(--yellow); font-weight:bold; } .lat-s { color:var(--red); font-weight:bold; }
-  .snip { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-family:Consolas,monospace; font-size:12px; }
-  .mname { font-weight:600; font-size:12px; word-break:break-all; }
-  .empty { text-align:center; color:var(--muted); padding:36px; }
-  .logbox { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px; font-family:Consolas,monospace; font-size:11px; color:var(--muted); max-height:140px; overflow-y:auto; margin-top:12px; }
-  .logbox div { padding:2px 0; word-break:break-all; }
-  /* modal — উত্তর দেখার জায়গা */
-  .ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:50; padding:20px; overflow-y:auto; }
+  tr.row-ok { border-left:3px solid var(--green); }
+  tr.row-fail { border-left:3px solid var(--red); }
+  tr.row-run { border-left:3px solid var(--purple); background:rgba(160,107,255,.05); }
+
+  .badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold; display:inline-block; }
+  .badge-ok { background:rgba(61,220,132,.12); color:var(--green); border:1px solid rgba(61,220,132,.3); }
+  .badge-fail { background:rgba(255,92,108,.12); color:var(--red); border:1px solid rgba(255,92,108,.3); }
+  .badge-wait { background:rgba(255,201,77,.12); color:var(--yellow); border:1px solid rgba(255,201,77,.3); }
+  .badge-run { background:rgba(160,107,255,.12); color:var(--purple); border:1px solid rgba(160,107,255,.3); }
+  .badge-free { background:rgba(77,159,255,.12); color:var(--blue); border:1px solid rgba(77,159,255,.3); font-size:10px; padding:2px 8px; margin-left:6px; }
+
+  .snippet { max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-family:monospace; font-size:12px; }
+  .err-icon { color:var(--red); cursor:help; }
+  .model-name { font-weight:600; font-size:13px; }
+  .latency-fast { color:var(--green); font-weight:bold; }
+  .latency-mid { color:var(--yellow); font-weight:bold; }
+  .latency-slow { color:var(--red); font-weight:bold; }
+
+  .note { background:rgba(255,201,77,.07); border:1px solid rgba(255,201,77,.25); border-radius:10px; padding:13px 16px; font-size:13px; color:var(--yellow); margin-bottom:16px; }
+  .log-box { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:var(--muted); max-height:130px; overflow-y:auto; margin-top:14px; }
+  .log-box div { padding:2px 0; }
+  .log-ok { color:var(--green); } .log-fail { color:var(--red); } .log-info { color:var(--blue); }
+  .empty-state { text-align:center; color:var(--muted); padding:40px; }
+
+  /* ===== Answer modal (উত্তর দেখার জায়গা) ===== */
+  .ov { display:none; position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:50; padding:20px; overflow-y:auto; }
   .ov.open { display:block; }
-  .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:40px auto; padding:22px; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; margin:50px auto; padding:22px; }
   .modal h3 { color:var(--blue); font-size:16px; margin-bottom:14px; word-break:break-all; }
-  .mrow { display:flex; gap:10px; margin-bottom:9px; font-size:13px; }
-  .mrow .k { color:var(--muted); min-width:110px; }
-  .mrow .v { word-break:break-all; }
-  .ansbox { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:13px; font-family:Consolas,monospace; font-size:12.5px; white-space:pre-wrap; word-break:break-word; max-height:260px; overflow-y:auto; color:var(--text); }
   .closex { float:right; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
-  .badge { padding:3px 11px; border-radius:20px; font-size:11px; font-weight:bold; display:inline-block; white-space:nowrap; }
+  .mrow { display:flex; gap:10px; margin-bottom:9px; font-size:13px; }
+  .mrow .k { color:var(--muted); min-width:120px; flex-shrink:0; }
+  .mrow .v { word-break:break-all; }
+  .ansbox { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:13px; font-family:Consolas,monospace; font-size:12.5px; white-space:pre-wrap; word-break:break-word; max-height:280px; overflow-y:auto; color:var(--text); }
 </style>
+<base target="_blank">
 </head>
 <body>
 
 <div class="header">
-  <h1>🤖 ZYVO · Model Control Center</h1>
-  <p>প্রতিটা model একটা একটা করে গভীরভাবে পরীক্ষা — latency, উত্তর, error সব লাইভ</p>
-  <div class="live"><span id="badge" class="badge b-run">লোড হচ্ছে…</span></div>
+  <h1>🤖 AI Model Tester Pro</h1>
+  <p>Auto-fetch সব মডেল → একটা একটা করে গভীর টেস্ট → লাইভ রিপোর্ট (server scanner সহ)</p>
 </div>
 
 <div class="container">
 
+  <!-- 🖥️ SERVER SCANNER (live) -->
   <div class="card">
-    <div class="card-title">🎛️ নিয়ন্ত্রণ</div>
-    <div class="now">🔬 এখন পরীক্ষা চলছে: <b id="nowT">—</b></div>
-    <div class="btns">
-      <button class="btn b-new" onclick="go('/scan/new')">🆕 নতুন model scan</button>
-      <button class="btn b-full" onclick="go('/scan/full')">🔄 Full Rescan</button>
-      <button class="btn b-stop" onclick="go('/scan/stop')">⏹️ থামাও</button>
+    <div class="card-title">🖥️ Server Scanner — লাইভ অবস্থা</div>
+    <div style="margin-bottom:14px">
+      <span id="srvBadge" class="srv-badge srv-idle">লোড হচ্ছে…</span>
     </div>
-    <div class="btns">
-      <button class="btn b-csv" onclick="csv()">📥 CSV ডাউনলোড</button>
-      <button class="btn b-copy" onclick="copyList('active')">📋 Active কপি</button>
-      <button class="btn b-copy" style="background:linear-gradient(135deg,#5a3ea8,#8f6fff);color:#fff" onclick="copyList('fail')">📋 Fail কপি</button>
+    <div class="now-test">🔬 এখন পরীক্ষা চলছে: <b id="srvNow">—</b></div>
+    <div class="srv-grid">
+      <div class="srv-cell"><b id="svProbed">0</b><span>পরীক্ষিত</span></div>
+      <div class="srv-cell"><b id="svTotal">0</b><span>মোট</span></div>
+      <div class="srv-cell"><b id="svActive" style="color:var(--green)">0</b><span>✓ Active</span></div>
+      <div class="srv-cell"><b id="svLimit" style="color:var(--yellow)">0</b><span>⏳ Limit</span></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-fetch" onclick="srvGo('/scan/new')">🆕 নতুন model scan</button>
+      <button class="btn btn-primary" onclick="srvGo('/scan/full')">🔄 Full Rescan</button>
+      <button class="btn btn-stop" onclick="srvGo('/scan/stop')">⏹️ থামাও</button>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat c-tot"><div class="num" id="c-tot" style="color:var(--blue)">0</div><div class="lbl">মোট মডেল</div></div>
-    <div class="stat c-ok"><div class="num" id="c-act" style="color:var(--green)">0</div><div class="lbl">✅ Active</div></div>
-    <div class="stat c-img"><div class="num" id="c-img" style="color:var(--purple)">0</div><div class="lbl">🎨 Image</div></div>
-    <div class="stat c-lim"><div class="num" id="c-lim" style="color:var(--yellow)">0</div><div class="lbl">⏳ Limit</div></div>
-    <div class="stat c-fail"><div class="num" id="c-fail" style="color:var(--red)">0</div><div class="lbl">❌ সমস্যা</div></div>
-    <div class="stat c-run"><div class="num" id="c-left" style="color:#a06bff">0</div><div class="lbl">🕐 বাকি</div></div>
+  <!-- ⚙️ SETTINGS -->
+  <div class="card">
+    <div class="card-title">⚙️ সেটআপ</div>
+    <div class="note">✅ <b>Key ও Base URL auto-load হয়</b> এই gateway থেকে — সরাসরি "মডেল লিস্ট আনো" চাপলেই হবে। ব্রাউজার থেকে টেস্ট করলে তা <b>server scanner-এর রিপোর্টেও যোগ হবে না</b> — শুধু নিজে দেখার জন্য।</div>
+
+    <label>🔑 API Key (auto)</label>
+    <input type="password" id="apiKey" placeholder="auto-load হবে…">
+    <div class="key-warn">🔒 Key শুধু ব্রাউজারেই থাকবে — কোনো সার্ভারে পাঠানো হচ্ছে না</div>
+
+    <div class="row">
+      <div>
+        <label>🌐 Base URL</label>
+        <input type="text" id="baseUrl" value="">
+      </div>
+      <div>
+        <label>⏱️ Timeout (সেকেন্ড)</label>
+        <input type="text" id="timeout" value="30">
+      </div>
+      <div>
+        <label>🔢 Concurrent</label>
+        <select id="conc">
+          <option value="1" selected>১টা করে (গভীর টেস্ট)</option>
+          <option value="3">৩টা করে</option>
+          <option value="5">৫টা করে</option>
+          <option value="8">৮টা করে (দ্রুত)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-fetch" id="btnFetch" onclick="fetchModels()">📡 মডেল লিস্ট আনো (Auto Fetch)</button>
+      <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶️ সব টেস্ট করো</button>
+      <button class="btn btn-stop" id="btnStop" onclick="stopTest()" disabled>⏹️ থামাও</button>
+    </div>
+    <div class="btn-group" style="margin-top:10px;">
+      <button class="btn btn-export" onclick="exportCSV()">📥 CSV ডাউনলোড</button>
+      <button class="btn btn-copy" onclick="copyOk()">📋 Active কপি</button>
+      <button class="btn btn-copy" style="background:linear-gradient(135deg,#5a3ea8,#8f6fff);color:#fff" onclick="copyFail()">📋 Fail লিস্ট কপি</button>
+      <button class="btn" style="background:var(--card2);border:1px solid var(--border);color:var(--muted)" onclick="clearAll()">🗑️ Clear</button>
+    </div>
+    <div class="log-box" id="logBox"><div class="log-info">📝 লগ রেডি... "মডেল লিস্ট আনো" চাপুন</div></div>
   </div>
 
-  <div class="pwrap">
-    <div class="pinfo"><span id="pinfo">—</span><span id="pct">0%</span></div>
-    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  <!-- 📊 STATS -->
+  <div class="stats" id="statsBar" style="display:none;">
+    <div class="stat c-total"><div class="num" id="stTotal" style="color:var(--blue)">0</div><div class="lbl">মোট মডেল</div></div>
+    <div class="stat c-ok"><div class="num" id="stOk" style="color:var(--green)">0</div><div class="lbl">✅ Active</div></div>
+    <div class="stat c-fail"><div class="num" id="stFail" style="color:var(--red)">0</div><div class="lbl">❌ Fail</div></div>
+    <div class="stat c-run"><div class="num" id="stRun" style="color:var(--purple)">0</div><div class="lbl">⏳ চলমান</div></div>
+    <div class="stat c-wait"><div class="num" id="stWait" style="color:var(--yellow)">0</div><div class="lbl">🕐 বাকি</div></div>
   </div>
 
-  <input type="text" id="q" placeholder="🔍 খুঁজো… (model নাম লিখলেই ফিল্টার)" oninput="render()">
-  <div class="fbtns">
-    <button class="fb on" data-f="all" onclick="setF('all',this)">সব</button>
-    <button class="fb" data-f="active" onclick="setF('active',this)">✅ Active</button>
-    <button class="fb" data-f="image" onclick="setF('image',this)">🎨 Image</button>
-    <button class="fb" data-f="limit" onclick="setF('limit',this)">⏳ Limit</button>
-    <button class="fb" data-f="testing" onclick="setF('testing',this)">⏳ চলছে</button>
-    <button class="fb" data-f="bad" onclick="setF('bad',this)">❌ সমস্যা</button>
+  <!-- 📈 PROGRESS -->
+  <div class="progress-wrap" id="progressWrap" style="display:none;">
+    <div class="progress-info">
+      <span id="progText">টেস্ট চলছে...</span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- 📋 MODEL LIST -->
+  <div class="card">
+    <div class="card-title">📋 মডেল লিস্ট (<span id="modelCount">0</span> টা)</div>
+    <textarea id="models" placeholder="'📡 মডেল লিস্ট আনো' চাপলে এখানে সব মডেল অটো আসবে... অথবা নিজে লিখুন (এক লাইনে একটা)"></textarea>
+  </div>
+
+  <!-- 📊 RESULTS -->
+  <div class="filter-btns">
+    <button class="fbtn active" onclick="setFilter('all',this)">সব</button>
+    <button class="fbtn" onclick="setFilter('ok',this)">✅ Active</button>
+    <button class="fbtn" onclick="setFilter('fail',this)">❌ Fail</button>
+    <button class="fbtn" onclick="setFilter('run',this)">⏳ চলমান</button>
   </div>
 
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>মডেল</th><th>স্ট্যাটাস</th><th>⚡ Latency</th><th>উত্তর / কারণ</th></tr></thead>
-      <tbody id="tb"><tr><td colspan="5" class="empty">লোড হচ্ছে…</td></tr></tbody>
+      <thead><tr>
+        <th>#</th><th>মডেল</th><th>প্রাইসিং</th><th>স্ট্যাটাস</th><th>⚡ Latency</th><th>Context</th><th>উত্তর</th>
+      </tr></thead>
+      <tbody id="tbody">
+        <tr><td colspan="7" class="empty-state">🔍 এখনো কিছু হয়নি — "মডেল লিস্ট আনো" চাপুন</td></tr>
+      </tbody>
     </table>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <div class="card-title">📜 স্ক্যানার লগ</div>
-    <div class="logbox" id="lg"><div>লোড হচ্ছে…</div></div>
   </div>
 </div>
 
+<!-- উত্তর দেখার modal -->
 <div class="ov" id="ov" onclick="if(event.target===this)closeM()">
   <div class="modal">
     <button class="closex" onclick="closeM()">✕</button>
@@ -536,103 +630,270 @@ const GUI_HTML = `<!doctype html>
     <div class="mrow"><span class="k">⚡ Latency</span><span class="v" id="mLat">—</span></div>
     <div class="mrow"><span class="k">ℹ️ তথ্য</span><span class="v" id="mLabel">—</span></div>
     <div class="mrow"><span class="k">🕐 শেষ পরীক্ষা</span><span class="v" id="mTime">—</span></div>
-    <div class="mrow"><span class="k">উত্তর / কারণ</span></div>
+    <div class="mrow"><span class="k">💬 পূর্ণ উত্তর</span></div>
     <div class="ansbox" id="mAns">—</div>
   </div>
 </div>
 
 <script>
-let DATA = {detail:[]}, F = 'all', Q = ''
-const $ = i => document.getElementById(i)
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')
+let results = [], running = false, filter = 'all', modelMeta = {};
 
-async function tick(){
-  try{
+/* ===== LOG ===== */
+function log(msg, cls) {
+  const box = document.getElementById('logBox');
+  const d = document.createElement('div');
+  d.className = cls || 'log-info';
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ===== SERVER SCANNER (live) ===== */
+async function srvTick() {
+  try {
     const d = await (await fetch('/scan/results')).json()
-    DATA = d
     const c = d.counts || {}
-    $('c-tot').textContent = d.detail.length
-    $('c-act').textContent = c.active || 0
-    $('c-img').textContent = c.image || 0
-    $('c-lim').textContent = c['daily-limit'] || 0
-    $('c-fail').textContent = (c.hanging||0)+(c['no-access']||0)+(c.paid||0)+(c.gone||0)+(c['non-chat']||0)
-    $('c-left').textContent = d.runTotal ? Math.max(0, d.runTotal-(d.runDone||0)) : 0
-    const b = $('badge')
-    if (d.scanning){ b.textContent='🟢 SCANNING: '+d.scanning.toUpperCase(); b.className='badge b-run' }
-    else { b.textContent='⚪ IDLE — scan শেষ '+ (d.updatedAt? new Date(d.updatedAt).toLocaleTimeString():''); b.className='badge b-lim' }
-    $('nowT').textContent = d.nowTesting || '— (এই মুহূর্তে কোনো টেস্ট চলছে না)'
-    const tot = d.runTotal || d.detail.length
-    const done = d.runDone ?? d.detail.length
-    const pct = tot ? Math.min(100, Math.round(done/tot*100)) : 0
-    $('pfill').style.width = pct+'%'
-    $('pct').textContent = pct+'%'
-    $('pinfo').textContent = 'পরীক্ষা হয়েছে: '+done+' / '+tot
-    const lg = $('lg')
-    lg.innerHTML = (d.log||[]).map(l=>'<div>'+esc(l)+'</div>').join('')
-    lg.scrollTop = 0
-    render()
-  }catch(e){ $('badge').textContent='⚠️ gateway offline' }
+    const b = document.getElementById('srvBadge')
+    if (d.scanning) { b.textContent = '🟢 SCANNING: ' + d.scanning.toUpperCase(); b.className = 'srv-badge srv-on' }
+    else { b.textContent = '⚪ IDLE'; b.className = 'srv-badge srv-idle' }
+    document.getElementById('srvNow').textContent = d.nowTesting || '—'
+    document.getElementById('svProbed').textContent = d.runDone ?? d.detail.length
+    document.getElementById('svTotal').textContent = d.runTotal || d.detail.length
+    document.getElementById('svActive').textContent = c.active || 0
+    document.getElementById('svLimit').textContent = c['daily-limit'] || 0
+  } catch(e) {}
 }
-function go(u){ fetch(u,{method:'POST'}).then(()=>setTimeout(tick,800)) }
-function setF(f,el){ F=f; document.querySelectorAll('.fb').forEach(x=>x.classList.remove('on')); el.classList.add('on'); render() }
+async function srvGo(u) { await fetch(u, {method:'POST'}); setTimeout(srvTick, 600); setTimeout(srvTick, 2500) }
+srvTick(); setInterval(srvTick, 4000)
 
-function bucket(s){
-  if(s==='active') return 'active'
-  if(s==='image') return 'image'
-  if(s==='daily-limit') return 'limit'
-  if(s==='testing') return 'testing'
-  return 'bad'
-}
-const BN = {active:['b-ok','✅ Active'],fail:['b-fail','❌ সমস্যা'],limit:['b-lim','⏳ Limit'],image:['b-img','🎨 Image'],testing:['b-run','⏳ চলছে'],bad:['b-fail','❌ সমস্যা']}
+/* ===== AUTO-LOAD CREDENTIALS ===== */
+(async function autoCreds() {
+  try {
+    const cfg = await (await fetch('/zyvo-config')).json()
+    const z = cfg.provider && cfg.provider.zyvo
+    if (z && z.options) {
+      document.getElementById('apiKey').value = z.options.apiKey || ''
+      document.getElementById('baseUrl').value = z.options.baseURL || ''
+      log('✅ Key ও Base URL auto-load হয়েছে — সরাসরি "মডেল লিস্ট আনো" চাপতে পারো', 'log-ok')
+    }
+  } catch(e) {}
+})()
 
-function render(){
-  const q = Q.toLowerCase()
-  let rows = DATA.detail.filter(r => F==='all' || bucket(r.status)===F)
-  if (q) rows = rows.filter(r => (r.id+' '+r.name+' '+(r.label||'')).toLowerCase().includes(q))
-  const ord = {testing:0, active:1, image:2, 'daily-limit':3, hanging:4, 'no-access':5, paid:6, gone:7, 'non-chat':8}
-  rows.sort((a,b)=>(ord[a.status]??9)-(ord[b.status]??9) || a.id.localeCompare(b.id))
-  $('tb').innerHTML = rows.length ? rows.map((r,i)=>{
-    const b = bucket(r.status)
-    const [cls, txt] = BN[b] || ['b-fail', r.status]
-    const lat = r.latency!=null ? '<span class="'+(r.latency<2000?'lat-f':r.latency<8000?'lat-m':'lat-s')+'">'+r.latency+' ms</span>' : '—'
-    const why = esc((r.reply || r.label || '—').slice(0,80))
-    return '<tr class="r-'+b+'" onclick="openM(\''+esc(r.id).replace(/'/g,"\\'")+'\')">'+
-      '<td>'+(i+1)+'</td><td class="mname">'+esc(r.id)+'</td>'+
-      '<td><span class="badge '+cls+'">'+txt+'</span></td><td>'+lat+'</td><td class="snip">'+why+'</td></tr>'
-  }).join('') : '<tr><td colspan="5" class="empty">— এই ফিল্টারে কিছু নেই —</td></tr>'
+/* ===== AUTO FETCH MODELS ===== */
+async function fetchModels() {
+  const key = document.getElementById('apiKey').value.trim();
+  const base = document.getElementById('baseUrl').value.trim().replace(/\/$/,'');
+  if (!key) { alert('⚠️ প্রথমে API Key দিন!'); return; }
+  const btn = document.getElementById('btnFetch');
+  btn.disabled = true; btn.textContent = '⏳ লোড হচ্ছে...';
+  log('API থেকে মডেল লিস্ট আনা হচ্ছে...', 'log-info');
+  try {
+    const res = await fetch(base + '/models', { headers: { 'Authorization': 'Bearer ' + key } });
+    const data = await res.json();
+    if (!res.ok) throw new Error((data.error && data.error.message) || ('HTTP ' + res.status));
+    const models = data.data || [];
+    log(models.length + ' টা মডেল পাওয়া গেছে!', 'log-ok');
+
+    modelMeta = {};
+    results = [];
+    document.getElementById('models').value = '';
+    let lines = [];
+    models.forEach(m => {
+      const id = m.id;
+      modelMeta[id] = m;
+      lines.push(id);
+    });
+    document.getElementById('models').value = lines.join('\n');
+    document.getElementById('modelCount').textContent = models.length;
+    render();
+    log('✅ লিস্ট রেডি — এবার "▶️ সব টেস্ট করো" চাপুন', 'log-ok');
+  } catch(e) {
+    log('❌ Fetch fail: ' + e.message, 'log-fail');
+    alert('❌ মডেল আনা যায়নি: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '📡 মডেল লিস্ট আনো (Auto Fetch)';
+  }
 }
 
-let CUR = null
-function openM(id){
-  const r = DATA.detail.find(x=>x.id===id)
-  if(!r) return
-  CUR = r
-  $('mName').textContent = r.id
-  $('mStatus').innerHTML = '<span class="badge '+(BN[bucket(r.status)]||['b-fail',r.status])[0]+'">'+(BN[bucket(r.status)]||['',r.status])[1]+'</span>'
-  $('mLat').textContent = r.latency!=null ? r.latency+' ms' : '—'
-  $('mLabel').textContent = r.label || '—'
-  $('mTime').textContent = r.lastChecked ? new Date(r.lastChecked).toLocaleString() : '—'
-  $('mAns').textContent = r.reply || r.error || r.label || '—'
-  $('ov').classList.add('open')
+/* ===== TEST ===== */
+function getModels() {
+  return document.getElementById('models').value.split('\n').map(s=>s.trim()).filter(Boolean);
 }
-function closeM(){ $('ov').classList.remove('open') }
 
-function csv(){
-  if(!DATA.detail.length){ alert('কোনো ডেটা নেই'); return }
-  let c = 'Model,Status,Latency_ms,Info\n'
-  DATA.detail.forEach(r=>{ c += '"'+r.id+'","'+r.status+'","'+(r.latency||'')+'","'+String(r.reply||r.label||'').replace(/"/g,"'")+'"\n' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([c],{type:'text/csv;charset=utf-8'}))
-  a.download = 'zyvo-models-' + new Date().toISOString().slice(0,10) + '.csv'; a.click()
+function pricingInfo(id) {
+  const m = modelMeta[id];
+  if (!m || !m.pricing) return '—';
+  const p = m.pricing;
+  const inP = parseFloat(p.prompt || 0), outP = parseFloat(p.completion || 0);
+  if (inP === 0 && outP === 0) return '🆓 FREE';
+  return '$' + inP.toFixed(2) + '/M';
 }
-function copyList(which){
-  let ids
-  if(which==='active') ids = DATA.detail.filter(r=>r.status==='active').map(r=>r.id)
-  else ids = DATA.detail.filter(r=>bucket(r.status)==='bad').map(r=>r.id+'  ['+(r.label||'') +']')
-  if(!ids.length){ alert('তালিকা খালি'); return }
-  navigator.clipboard.writeText(ids.join('\n')).then(()=>alert('📋 '+ids.length+' টা কপি হয়েছে!'))
+
+function contextLen(id) {
+  const m = modelMeta[id];
+  if (!m || !m.context_length) return '—';
+  const c = m.context_length;
+  return c >= 1e6 ? (c/1e6).toFixed(0)+'M' : c >= 1e3 ? (c/1e3).toFixed(0)+'K' : c;
 }
-tick(); setInterval(tick, 3000)
+
+async function testOne(model, key, url, timeoutSec) {
+  const t0 = performance.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), timeoutSec*1000);
+  try {
+    const res = await fetch(url, {
+      method:'POST',
+      headers: { 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ model: model, messages: [{role:'user', content:'Reply with exactly one word: OK'}], max_tokens: 10 }),
+      signal: ctrl.signal
+    });
+    const data = await res.json();
+    const lat = Math.round(performance.now()-t0);
+    if (!res.ok) throw new Error((data.error&&data.error.message)||('HTTP '+res.status));
+    const reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+    if (!reply.trim()) throw new Error('খালি রেসপন্স');
+    return { status:'ok', latency:lat, reply:reply.trim().slice(0,150) };
+  } catch(e) {
+    const lat = Math.round(performance.now()-t0);
+    return { status:'fail', latency:lat, error: e.name==='AbortError' ? 'Timeout' : e.message };
+  } finally { clearTimeout(timer); }
+}
+
+async function startTest() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { alert('⚠️ প্রথমে API Key দিন!'); return; }
+  const base = document.getElementById('baseUrl').value.trim().replace(/\/$/,'');
+  const timeoutSec = parseInt(document.getElementById('timeout').value)||30;
+  const conc = parseInt(document.getElementById('conc').value)||3;
+  const models = getModels();
+  if (!models.length) { alert('⚠️ মডেল লিস্ট খালি! আগে "মডেল লিস্ট আনো" চাপুন'); return; }
+
+  running = true;
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+  document.getElementById('statsBar').style.display = 'grid';
+  document.getElementById('progressWrap').style.display = 'block';
+
+  results = models.map(m => ({ model:m, status:'wait', latency:null, reply:'', error:'' }));
+  render();
+  log('🚀 টেস্ট শুরু — ' + models.length + ' টা মডেল, concurrent: ' + conc, 'log-info');
+
+  let idx = 0;
+  async function worker() {
+    while (running && idx < models.length) {
+      const i = idx++;
+      const r = results.find(x=>x.model===models[i]);
+      r.status = 'run'; render();
+      const out = await testOne(models[i], key, base + '/chat/completions', timeoutSec);
+      Object.assign(r, out); render();
+      if (out.status==='ok') log('✅ ' + models[i] + ' (' + out.latency + 'ms)', 'log-ok');
+      else log('❌ ' + models[i] + ' — ' + out.error, 'log-fail');
+    }
+  }
+  await Promise.all(Array.from({length:conc}, worker));
+
+  running = false;
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+  const ok = results.filter(r=>r.status==='ok').length;
+  const failList = results.filter(r=>r.status==='fail');
+  log('🏁 শেষ! ✅ Active: ' + ok + ' / ❌ Fail: ' + failList.length, 'log-info');
+  if (ok > 0) {
+    const sorted = [...results].filter(r=>r.status==='ok').sort((a,b)=>a.latency-b.latency);
+    log('⚡ সবচেয়ে ফাস্ট: ' + sorted[0].model + ' (' + sorted[0].latency + 'ms)', 'log-ok');
+  }
+  alert('🏁 টেস্ট শেষ!\n✅ Active: ' + ok + '\n❌ Fail: ' + (results.length - ok));
+}
+
+function stopTest(){ running = false; log('⏹️ থামানো হলো', 'log-info'); }
+
+/* ===== RENDER ===== */
+function esc(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+function render() {
+  const tb = document.getElementById('tbody');
+  const rows = results.filter(r => filter==='all' || r.status===filter);
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="7" class="empty-state">' + (results.length ? 'এই ফিল্টারে কিছু নেই' : '🔍 মডেল লিস্ট আনুন') + '</td></tr>';
+  } else {
+    tb.innerHTML = rows.map((r,i) => {
+      let badge, rowCls;
+      if (r.status==='ok') { badge='<span class="badge badge-ok">✅ Active</span>'; rowCls='row-ok'; }
+      else if (r.status==='fail') { badge='<span class="badge badge-fail">❌ Fail</span>'; rowCls='row-fail'; }
+      else if (r.status==='run') { badge='<span class="badge badge-run">⏳ চলছে...</span>'; rowCls='row-run'; }
+      else { badge='<span class="badge badge-wait">🕐 অপেক্ষা</span>'; rowCls=''; }
+      let latHtml = '—';
+      if (r.latency != null) {
+        const cls = r.latency < 2000 ? 'latency-fast' : r.latency < 8000 ? 'latency-mid' : 'latency-slow';
+        latHtml = '<span class="' + cls + '">' + r.latency + ' ms</span>';
+      }
+      const free = pricingInfo(r.model) === '🆓 FREE' ? '<span class="badge-free">FREE</span>' : '';
+      const err = r.error ? ' <span class="err-icon" title="' + esc(r.error) + '">⚠️</span>' : '';
+      const meta = modelMeta[r.model];
+      const desc = meta && meta.description ? ' title="' + esc(meta.description.slice(0,120)) + '"' : '';
+      return '<tr class="' + rowCls + '">' +
+        '<td>' + (i+1) + '</td>' +
+        '<td class="model-name"' + desc + '>' + esc(r.model) + free + '</td>' +
+        '<td>' + pricingInfo(r.model) + '</td>' +
+        '<td>' + badge + err + '</td>' +
+        '<td>' + latHtml + '</td>' +
+        '<td>' + contextLen(r.model) + '</td>' +
+        '<td class="snippet" title="' + esc(r.reply||'') + '">' + esc(r.reply||'—') + '</td></tr>';
+    }).join('');
+  }
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('stTotal').textContent = results.length;
+  document.getElementById('stOk').textContent = results.filter(r=>r.status==='ok').length;
+  document.getElementById('stFail').textContent = results.filter(r=>r.status==='fail').length;
+  document.getElementById('stRun').textContent = results.filter(r=>r.status==='run').length;
+  document.getElementById('stWait').textContent = results.filter(r=>r.status==='wait').length;
+  const done = results.filter(r=>r.status==='ok'||r.status==='fail').length;
+  const pct = results.length ? Math.round(done/results.length*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('progText').textContent = 'টেস্ট হচ্ছে: ' + done + '/' + results.length;
+}
+
+function setFilter(f, btn){
+  filter = f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+/* ===== EXPORT / COPY ===== */
+function exportCSV(){
+  if(!results.length){ alert('কোনো ডেটা নেই'); return; }
+  let csv = 'Model,Pricing,Status,Latency_ms,Reply,Error\n';
+  results.forEach(r=>{
+    csv += '"'+r.model+'","'+pricingInfo(r.model)+'","'+r.status+'","'+(r.latency||'')+'","'+(r.reply||'').replace(/"/g,'""')+'","'+(r.error||'').replace(/"/g,'""')+'"\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'model_test_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.csv'; a.click();
+}
+
+function copyOk(){
+  const ok = results.filter(r=>r.status==='ok').map(r=>r.model);
+  if(!ok.length){ alert('কোনো active মডেল নেই'); return; }
+  navigator.clipboard.writeText(ok.join('\n')).then(()=>alert('📋 ' + ok.length + ' টা active মডেল কপি হয়েছে!'));
+}
+function copyFail(){
+  const fail = results.filter(r=>r.status==='fail').map(r=>r.model + '  [' + (r.error||'fail') + ']');
+  if(!fail.length){ alert('কোনো fail নেই 🎉'); return; }
+  navigator.clipboard.writeText(fail.join('\n')).then(()=>alert('📋 ' + fail.length + ' টা fail মডেল কপি হয়েছে!'));
+}
+function clearAll(){
+  results = []; modelMeta = {};
+  document.getElementById('models').value = '';
+  document.getElementById('modelCount').textContent = '0';
+  document.getElementById('statsBar').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  render();
+}
 </script>
 </body>
 </html>
