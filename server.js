@@ -87,7 +87,7 @@ const child = spawn(process.execPath, ["node_modules/omniroute/dist/server-ws.mj
     DATA_DIR: CHILD_DATA,
     // both matter: NODE_OPTIONS raises V8's heap ceiling, OMNIROUTE_MEMORY_MB
     // is what omniroute's own pressure guard reads
-    OMNIROUTE_MEMORY_MB: "1024",
+    OMNIROUTE_MEMORY_MB: "2048",
     NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=1024"].filter(Boolean).join(" "),
   },
   stdio: ["ignore", "pipe", "pipe"],
