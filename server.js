@@ -494,7 +494,16 @@ const server = http.createServer((req, res) => {
       detail: detailList(),
     })
   if (req.method === "GET" && u.startsWith("/scan/status"))
-    return send(res, 200, { scanning: state.scanning, counts: counts(), models: Object.keys(state.models).length, updatedAt: state.updatedAt, log: state.log.slice(0, 20) })
+    return send(res, 200, {
+      scanning: state.scanning,
+      nowTesting: state.nowTesting,
+      counts: counts(),
+      models: Object.keys(state.models).length,
+      totalIds: state.totalIds || 0,
+      updatedAt: state.updatedAt,
+      log: state.log.slice(0, 20),
+      detail: detailList(),
+    })
   if (req.method === "GET" && u.startsWith("/active-models"))
     return send(res, 200, activeModelsPayload())
   if (req.method === "GET" && u.startsWith("/zyvo-config")) {
