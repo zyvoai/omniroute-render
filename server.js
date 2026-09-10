@@ -219,6 +219,14 @@ async function verifyOne(id) {
 
 async function runLab(ids, kind) {
   if (state.scanning) return
+  // a real user chat beats scanning — wait until the line is quiet
+  let waited = 0
+  while (chatBusy() && waited < 30 * 60 * 1000) {
+    if (!state.scanning) state.scanning = kind // hold the slot while waiting
+    await new Promise((r) => setTimeout(r, 20_000))
+    waited += 20_000
+  }
+  if (chatBusy()) { state.scanning = null; note("scan skipped — user chatting"); return }
   state.scanning = kind
   state.stopFlag = false
   state.runTotal = ids.length
@@ -229,6 +237,7 @@ async function runLab(ids, kind) {
 
   for (const id of ids) {
     if (state.stopFlag) { note("stopped by operator"); break }
+    while (chatBusy() && !state.stopFlag) await new Promise((r) => setTimeout(r, 15_000))
     const r = await verifyOne(id)
     state.runDone++
     const m = state.models[id]
@@ -460,6 +469,10 @@ refresh(); setInterval(refresh, 8000)
 </script></body></html>`
 
 // ── http server: scanner routes + proxy ────────────────────────────
+// chat-first: scans pause while the user is actively chatting
+let lastChatAt = 0
+const chatBusy = () => Date.now() - lastChatAt < 5 * 60 * 1000
+
 const send = (res, code, obj) => {
   res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" })
   res.end(JSON.stringify(obj))
@@ -467,6 +480,9 @@ const send = (res, code, obj) => {
 
 const server = http.createServer((req, res) => {
   const u = req.url || "/"
+  // real user traffic (phone zyvo / tester) marks the chat line busy —
+  // scanner probes bypass the gateway, so they never set this
+  if (u.startsWith("/v1/")) lastChatAt = Date.now()
   if (req.method === "GET" && (u === "/scan" || u === "/scan/")) {
     // server-render the live data INTO the page — works even if JS fetch fails
     const init = JSON.stringify({
