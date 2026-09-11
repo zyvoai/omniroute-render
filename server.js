@@ -291,6 +291,27 @@ const listIds = () =>
 const activeList = () => Object.entries(state.models).filter(([, v]) => v.status === "active").map(([id]) => id)
 const limitList = () => Object.entries(state.models).filter(([, v]) => v.status === "daily-limit").map(([id]) => id)
 
+// ONE automatic scan per day — combined (new + daily-limit + active check).
+// Manual buttons (/scan/full, /scan/new) stay available anytime.
+const dailyOnce = () =>
+  kick("daily", async () => {
+    if (Date.now() - (state.lastAutoScanAt || 0) < 24 * 60 * 60 * 1000) return
+    const ids = await listIds()
+    if (!ids.length) return
+    const seen = new Set()
+    const todo = []
+    for (const id of ids) {
+      const st = state.models[id]?.status
+      if (!state.models[id] || st === "daily-limit" || st === "active") {
+        if (!seen.has(id)) { seen.add(id); todo.push(id) }
+      }
+    }
+    note(`daily scan: ${todo.length} model(s) (new + limit + active check)`)
+    await runLab(todo, "daily")
+    state.lastAutoScanAt = Date.now()
+    save()
+  })
+
 const fullScan = () => kick("full", async () => runLab(await listIds(), "full"))
 const newScan = () =>
   kick("new", async () => {
@@ -326,7 +347,7 @@ const bootScan = () => {
       setTimeout(bootScan, 45_000)
       return
     }
-    await runLab(ids, "full")
+    await dailyOnce()
   })
 }
 
@@ -600,8 +621,5 @@ load()
 server.listen(PORT, () => console.log(`[lab] control center on :${PORT}, omniroute on :${UPSTREAM_PORT}`))
 
 setTimeout(bootScan, 60_000)
-setInterval(newScan, NEW_EVERY_MS)
-setTimeout(newScan, 5 * 60 * 1000)
-setInterval(activeScan, ACTIVE_EVERY_MS)
-setInterval(dailyScan, LIMIT_EVERY_MS)
-setInterval(fullScan, FULL_EVERY_MS)
+// single automatic pass per day (gate checks every 30 min, fires at most once/24h)
+setInterval(dailyOnce, 30 * 60 * 1000)
