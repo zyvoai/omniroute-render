@@ -16,13 +16,36 @@
 // ─────────────────────────────────────────────────────────────────────
 
 import http from "node:http"
+import net from "node:net"
+import os from "node:os"
 import { spawn } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 
 const PORT = Number(process.env.PORT || 10000)
-const UPSTREAM_HOST = "127.0.0.1"
+// The child normally binds loopback, but some Next.js versions bind the
+// container hostname instead — probe both and stick with whichever answers.
+let UP_HOST = "127.0.0.1"
 const UPSTREAM_PORT = Number(process.env.UPSTREAM_PORT || 20128)
+const probeUpstream = () =>
+  new Promise((resolve) => {
+    const tryHost = (host, then) => {
+      const s = net.connect({ host, port: UPSTREAM_PORT, timeout: 3000 })
+      s.once("connect", () => { s.destroy(); resolve(host) })
+      s.once("timeout", () => { s.destroy(); then && then() })
+      s.once("error", () => { then && then() })
+    }
+    tryHost("127.0.0.1", () => tryHost(os.hostname(), () => resolve(null)))
+  })
+const watchUpstream = async () => {
+  const host = await probeUpstream()
+  if (host && host !== UP_HOST) {
+    console.log(`[lab] upstream answers on ${host}:${UPSTREAM_PORT} — switching`)
+    UP_HOST = host
+  }
+}
+setInterval(watchUpstream, 30_000)
+setTimeout(watchUpstream, 15_000)
 // Railway volume mounts at DATA_DIR (/app/data) — providers DB + lab state
 // survive every redeploy
 const GATEWAY_DATA = process.env.DATA_DIR
@@ -56,7 +79,8 @@ let state = {
   log: [],
   models: {},     // id → { status, label, latency, reply, error, strikes, lastChecked }
 }
-const SEED_FILE = path.join(__dirname, "seed-active.json")
+// ESM — no __dirname; the repo files sit in the process working dir on Railway
+const SEED_FILE = path.join(process.cwd(), "seed-active.json")
 const load = () => {
   try {
     state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }
@@ -119,7 +143,7 @@ const post = (urlPath, payload, timeoutMs) =>
     const t0 = Date.now()
     const req = http.request(
       {
-        host: UPSTREAM_HOST,
+        host: UP_HOST,
         port: UPSTREAM_PORT,
         path: urlPath,
         method: "POST",
@@ -292,7 +316,7 @@ const listIds = () =>
     http
       .get(
         {
-          host: UPSTREAM_HOST,
+          host: UP_HOST,
           port: UPSTREAM_PORT,
           path: "/v1/models",
           headers: SCAN_KEY ? { Authorization: `Bearer ${SCAN_KEY}` } : {},
@@ -599,7 +623,7 @@ const proxy = (req, res) => {
   const isBodyful = req.method === "POST" || req.method === "PUT" || req.method === "PATCH"
   if (!isBodyful) {
     const up = http.request(
-      { host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers: { ...req.headers, host: `${UPSTREAM_HOST}:${UPSTREAM_PORT}` } },
+      { host: UP_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers: { ...req.headers, host: `${UP_HOST}:${UPSTREAM_PORT}` } },
       (ur) => { res.writeHead(ur.statusCode, ur.headers); ur.pipe(res) }
     )
     up.on("error", () => {
@@ -617,7 +641,7 @@ const proxy = (req, res) => {
     headers["content-length"] = String(body.length)
     delete headers["transfer-encoding"]
     const up = http.request(
-      { host: UPSTREAM_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers },
+      { host: UP_HOST, port: UPSTREAM_PORT, path: req.url, method: req.method, headers },
       (ur) => { res.writeHead(ur.statusCode, ur.headers); ur.pipe(res) }
     )
     up.on("error", () => {
