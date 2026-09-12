@@ -152,9 +152,20 @@ const replyText = (body) => {
 }
 
 // ── lab run (one model at a time, fully verified) ──────────────────
+// picker shows ONLY the model name — route/vendor prefixes (hi/, oc/, x-ai/,
+// mistralai/, …) are dropped; the last segment is always the model itself.
+// Slug-style ids get humanized (grok-4.5 → Grok 4.5, ministral-8b → Ministral 8B);
+// ids that already carry a human name (spaces/caps, e.g. AI Horde) pass through.
 const prettyName = (id) => {
-  const tail = id.includes("/") ? id.split("/").slice(1).join("/") : id
-  return tail.replace(/[:_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\s+Free\b/i, " (Free)")
+  const tail = (id.includes("/") ? id.split("/").pop() : id).trim()
+  const isSlug = /^[a-z0-9._-]+$/.test(tail)
+  const name = isSlug
+    ? tail
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .replace(/\b(\d+)([a-z])\b/g, (m, n, l) => n + l.toUpperCase())
+    : tail.replace(/[:_]/g, " ")
+  return name.replace(/\s+Free\b/i, " (Free)")
 }
 
 async function verifyOne(id) {
