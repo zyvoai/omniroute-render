@@ -56,12 +56,25 @@ let state = {
   log: [],
   models: {},     // id → { status, label, latency, reply, error, strikes, lastChecked }
 }
+const SEED_FILE = path.join(__dirname, "seed-active.json")
 const load = () => {
   try {
     state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }
     state.scanning = null // a restart kills in-flight probes; never inherit the flag
     state.stopFlag = false
   } catch {}
+  // A wiped volume (or a bad deploy's empty save) must never leave zyvo with
+  // zero models — reseed the last-known-good actives shipped with the repo.
+  if (!Object.keys(state.models).length) {
+    try {
+      const now = Date.now()
+      for (const id of JSON.parse(fs.readFileSync(SEED_FILE, "utf8"))) {
+        state.models[id] = { status: "active", label: "", latency: 0, reply: "", error: "", strikes: 0, lastChecked: now }
+      }
+      state.log.unshift(`${new Date(now).toISOString()} state was empty — seeded ${Object.keys(state.models).length} actives from seed-active.json`)
+      save()
+    } catch {}
+  }
 }
 const save = () => {
   try {
